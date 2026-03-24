@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>P-Humans Profit Sheet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+ 
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* 포스코 그룹 디자인 테마 적용 (세련된 Modern Blue & Steel Gray) */
+    :root {
+      --primary: #004790; /* POSCO Blue */
+      --primary-light: #005eb8;
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --text: #222222;
+      --sub: #666666;
+      --border: #dbe0e4;
+      
+      /* 그래프 전용 색상 변경 */
+      --color-sales-bar: #2563EB; /* 매출액 막대: 선명한 로열 블루 */
+      --positive: #059669;        /* 영업이익 흑자: 에메랄드 그린 */
+      --negative: #DC2626;        /* 영업이익 적자: 크림슨 레드 */
+      
+      /* 섹션별 고유 색상 (시인성 강화를 위한 명도 차이 적용) */
+      --color-samu: #1E3A8A;      /* 사무: 다크 네이비 블루 */
+      --color-chongmu: #3B82F6;   /* 총무: 브라이트 블루 */
+      --color-car: #94A3B8;       /* 차량: 스틸 그레이 */
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* 상단 헤더 */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+
+    .year-select {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+    .year-select option { color: var(--text); background: white; }
+
+    .admin-btn {
+      background: white;
+      color: var(--primary);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .admin-btn:hover { background: #f1f5f9; }
+
+    .container {
+      padding: 20px 16px;
+      max-width: 760px;
+      margin: auto;
+    }
+
+    .tabs {
+      display: flex;
+      background: #e9ecef;
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--sub);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--card);
+      color: var(--primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .section-buttons {
+      display: none;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .sec-btn {
+      flex: 1;
+      padding: 12px 0;
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--card);
+      color: var(--sub);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sec-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 4px 10px rgba(0,71,144,0.2);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+      border: 1px solid var(--border);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--sub);
+      margin-top: -6px;
+      margin-bottom: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 12px 4px;
+      text-align: right;
+    }
+
+    th:first-child, td:first-child { text-align: left; font-weight: 600; }
+
+    th {
+      color: var(--sub);
+      border-bottom: 2px solid var(--primary-light);
+      font-weight: 700;
+    }
+
+    .profit { font-weight: 700; font-size: 14px; }
+    .positive { color: var(--positive); }
+    .negative { color: var(--negative); }
+    .empty-data { color: #cbd5e1; font-weight: normal; }
+
+    .main-row {
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.2s;
+    }
+    .main-row:hover { background: #f8fafc; }
+
+    .month-cell {
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .detail-row { display: none; }
+
+    .detail-box {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 4px 0 12px 0;
+      font-size: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .d-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px dashed #dbe0e4;
+      gap: 8px;
+    }
+    .d-row:last-child { border-bottom: none; }
+    .d-title { font-weight: 700; color: var(--text); }
+    .d-value { color: var(--sub); text-align: right; }
+    .d-value b { color: var(--text); }
+
+    .insight-box {
+      background: #f0f6fc;
+      border: 1px solid #cce0f5;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--primary);
+      line-height: 1.5;
+    }
+    .insight-box b { color: var(--primary); font-weight: 700; }
+    .insight-box .bad { color: var(--negative); }
+    .insight-box .good { color: var(--positive); }
+
+    .total-row td {
+      background: #f1f3f5;
+      font-weight: 700;
+      color: var(--text);
+      border-top: 2px solid var(--sub);
+      border-bottom: none;
+    }
+    .total-row td:first-child { text-align: center; }
+
+    .chart-container {
+      height: 220px; 
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      padding-top: 10px;
+      position: relative;
+      width: 100%;
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      height: 100%;
+    }
+
+    .bar-wrapper {
+      flex: 1;
+      position: relative;
+      margin-bottom: 22px; 
+    }
+
+    .bar {
+      position: absolute;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      word-break: break-all;
+      transition: height 0.3s, bottom 0.3s, top 0.3s;
+    }
+
+    .bar-empty { background: #cbd5e1 !important; color: transparent; height: 2px !important; }
+
+    .bar-label {
+      text-align: center;
+      font-size: 11px;
+      color: var(--sub);
+      font-weight: 600;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .pie-container { margin-bottom: 24px; }
+    .pie-container:last-child { margin-bottom: 0; }
+
+    .pie-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 10px 0;
+      flex-wrap: wrap;
+    }
+
+    .donut-chart {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      flex-shrink: 0;
+    }
+
+    .donut-inner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 74px;
+      height: 74px;
+      background: var(--card);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--sub);
+      line-height: 1.3;
+    }
+
+    .legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 180px;
+    }
+
+    .legend-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      gap: 10px;
+    }
+
+    .legend-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 3px; }
+
+    .legend-value { font-weight: 700; text-align: right; color: var(--text); }
+
+    .edit-box {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .edit-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .edit-row label {
+      font-size: 12px;
+      color: var(--sub);
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .edit-row input {
+      width: 140px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-align: right;
+      font-size: 13px;
+    }
+
+    .edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+    .save-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+    }
+
+    .muted { color: var(--sub); font-size: 12px; font-weight: normal; }
+
+    @media (max-width: 520px) {
+      .pie-wrapper { flex-direction: column; align-items: center; }
+      .legend { width: 100%; }
+      .edit-row input { width: 120px; }
+      table { font-size: 12px; }
+      th, td { padding: 10px 2px; }
+      .header-title { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="header-title">📈 Profit Sheet</div>
+      <select id="yearSelect" class="year-select" onchange="changeYear()">
+        <!-- 2026년을 기본이자 유일한 옵션으로 설정. 추후 필요시 아래에 2027년 등을 추가할 수 있습니다. -->
+        <option value="2026" selected>2026년</option>
+      </select>
+    </div>
+    <button class="admin-btn" onclick="toggleAdmin()" id="adminBtn">관리자 로그인</button>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button id="tab-group" class="tab-btn active" onclick="setMode('group')">🏢 그룹 합계</button>
+      <button id="tab-section" class="tab-btn" onclick="setMode('section')">📊 섹션별 조회</button>
+    </div>
+
+    <div id="section-buttons" class="section-buttons">
+      <button id="btn-광양사무지원" class="sec-btn active" onclick="setSection('광양사무지원')">광양사무지원</button>
+      <button id="btn-광양총무지원" class="sec-btn" onclick="setSection('광양총무지원')">광양총무지원</button>
+      <button id="btn-광양차량지원" class="sec-btn" onclick="setSection('광양차량지원')">광양차량지원</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 id="tableTitle">🏢 광양서비스지원그룹 손익표</h3>
+        <span class="muted">단위: 백만원</span>
+      </div>
+      <p class="subtitle">💡 월을 클릭하면 상세 분석이 열립니다. 관리자 모드에서는 입력되지 않은 달도 바로 수정할 수 있습니다.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>월</th>
+            <th>매출액</th>
+            <th>매출원가</th>
+            <th>매출총이익</th>
+            <th>판관비</th>
+            <th>영업이익</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="group-charts" class="card">
+      <div class="card-header"><h3>📊 매출액 추이</h3></div>
+      <div style="margin-bottom:24px;">
+        <div class="chart-container" id="salesChartArea"></div>
+      </div>
+
+      <div class="card-header"><h3>📈 영업이익 추이 (0 기준선 적용)</h3></div>
+      <div style="margin-bottom:24px;">
+        <div class="chart-container" id="opChartArea"></div>
+      </div>
+
+      <div class="card-header" style="margin-top:24px;"><h3>🍩 섹션별 누적 매출 비중</h3></div>
+      <div class="pie-container">
+        <div class="pie-wrapper">
+          <div class="donut-chart" id="pieChartSales">
+            <div class="donut-inner">매출<br>비중</div>
+          </div>
+          <div class="legend" id="pieLegendSales"></div>
+        </div>
+      </div>
+
+      <div class="card-header" style="margin-top:24px;"><h3>🍩 섹션별 누적 영업이익 비중</h3></div>
+      <div class="pie-container">
+        <div class="pie-wrapper">
+          <div class="donut-chart" id="pieChartOp">
+            <div class="donut-inner">이익<br>비중</div>
+          </div>
+          <div class="legend" id="pieLegendOp"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-charts" class="card" style="display:none;">
+      <div class="card-header"><h3 id="sectionSalesChartTitle">📊 매출액 추이</h3></div>
+      <div style="margin-bottom:24px;">
+        <div class="chart-container" id="sectionSalesChartArea"></div>
+      </div>
+
+      <div class="card-header"><h3 id="sectionOpChartTitle">📈 영업이익 추이</h3></div>
+      <div class="chart-container" id="sectionOpChartArea"></div>
+    </div>
+  </div>
+
+  <script>
+    let isAdmin = false;
+    const ADMIN_PASS = "admin1234";
+    // 기본 연도를 2026년으로 설정
+    let currentYear = "2026";
+
+    function make12Months(m1, m2) {
+      const emptyMonth = (month) => ({
+        month, sales: 0, cogs: 0, gp: 0, sga: 0, op: 0, cogs_labor: 0, cogs_exp: 0, sga_labor: 0, sga_exp: 0
+      });
+
+      const arr = [
+        m1 || emptyMonth("1월"),
+        m2 || emptyMonth("2월")
+      ];
+      for (let i = 3; i <= 12; i++) arr.push(emptyMonth(`${i}월`));
+      return arr;
+    }
+
+    function getDefaultData() {
+      return {
+        "광양사무지원": make12Months(
+          { month: "1월", sales: 69, cogs: 62, gp: 7, sga: 6, op: 1, cogs_labor: 47, cogs_exp: 15, sga_labor: 4, sga_exp: 2 },
+          { month: "2월", sales: 69, cogs: 74, gp: -5, sga: 6, op: -11, cogs_labor: 56, cogs_exp: 18, sga_labor: 4, sga_exp: 2 }
+        ),
+        "광양총무지원_순수": make12Months(
+          { month: "1월", sales: 66, cogs: 51, gp: 15, sga: 5, op: 11, cogs_labor: 36, cogs_exp: 15, sga_labor: 3, sga_exp: 2 },
+          { month: "2월", sales: 66, cogs: 50, gp: 16, sga: 5, op: 12, cogs_labor: 35, cogs_exp: 15, sga_labor: 3, sga_exp: 2 }
+        ),
+        "시설운영": make12Months(
+          { month: "1월", sales: 62, cogs: 45, gp: 17, sga: 4, op: 13, cogs_labor: 36, cogs_exp: 9, sga_labor: 3, sga_exp: 1 },
+          { month: "2월", sales: 62, cogs: 45, gp: 17, sga: 4, op: 13, cogs_labor: 34, cogs_exp: 11, sga_labor: 3, sga_exp: 1 }
+        ),
+        "광양차량지원": make12Months(
+          { month: "1월", sales: 738, cogs: 727, gp: 11, sga: 24, op: -13, cogs_labor: 187, cogs_exp: 540, sga_labor: 17, sga_exp: 7 },
+          { month: "2월", sales: 744, cogs: 712, gp: 32, sga: 24, op: 8, cogs_labor: 164, cogs_exp: 548, sga_labor: 16, sga_exp: 8 }
+        )
+      };
+    }
+
+    let baseData = {};
+    let appData = {};
+    let currentMode = 'group';
+    let currentSection = '광양사무지원';
+
+    const titleMap = {
+      "그룹전체": "🏢 광양서비스지원그룹",
+      "광양사무지원": "📋 광양사무지원섹션",
+      "광양총무지원": "💼 광양총무지원섹션(시설포함)",
+      "광양차량지원": "🚗 광양차량지원섹션"
+    };
+
+    function loadDataForYear(year) {
+      const stored = localStorage.getItem(`profitData_${year}`);
+      if (stored) return JSON.parse(stored);
+      // 2026년을 기본 데이터로 세팅
+      return year === "2026" ? getDefaultData() : {
+        "광양사무지원": make12Months(),
+        "광양총무지원_순수": make12Months(),
+        "시설운영": make12Months(),
+        "광양차량지원": make12Months()
+      };
+    }
+
+    function changeYear() {
+      currentYear = document.getElementById("yearSelect").value;
+      baseData = loadDataForYear(currentYear);
+      updateDashboard();
+    }
+
+    function toggleAdmin() {
+      if (isAdmin) {
+        isAdmin = false;
+        document.getElementById('adminBtn').innerText = '관리자 로그인';
+        alert('관리자 모드가 종료되었습니다.');
+      } else {
+        const pass = prompt('관리자 비밀번호를 입력하세요:');
+        if (pass === ADMIN_PASS) {
+          isAdmin = true;
+          document.getElementById('adminBtn').innerText = '관리자 로그아웃';
+          alert('관리자 모드가 활성화되었습니다.');
+        } else if (pass !== null) {
+          alert('비밀번호가 올바르지 않습니다.');
+        }
+      }
+      updateDashboard();
+    }
+
+    function processData() {
+      const mergedChongmu = baseData["광양총무지원_순수"].map((item, i) => {
+        const s = baseData["시설운영"][i];
+        return {
+          month: item.month,
+          sales: item.sales + s.sales,
+          cogs: item.cogs + s.cogs,
+          gp: item.gp + s.gp,
+          sga: item.sga + s.sga,
+          op: item.op + s.op,
+          cogs_labor: item.cogs_labor + s.cogs_labor,
+          cogs_exp: item.cogs_exp + s.cogs_exp,
+          sga_labor: item.sga_labor + s.sga_labor,
+          sga_exp: item.sga_exp + s.sga_exp
+        };
+      });
+
+      const groupTotal = baseData["광양사무지원"].map((item, i) => {
+        const ch = mergedChongmu[i];
+        const ca = baseData["광양차량지원"][i];
+        return {
+          month: item.month,
+          sales: item.sales + ch.sales + ca.sales,
+          cogs: item.cogs + ch.cogs + ca.cogs,
+          gp: item.gp + ch.gp + ca.gp,
+          sga: item.sga + ch.sga + ca.sga,
+          op: item.op + ch.op + ca.op,
+          cogs_labor: item.cogs_labor + ch.cogs_labor + ca.cogs_labor,
+          cogs_exp: item.cogs_exp + ch.cogs_exp + ca.cogs_exp,
+          sga_labor: item.sga_labor + ch.sga_labor + ca.sga_labor,
+          sga_exp: item.sga_exp + ch.sga_exp + ca.sga_exp
+        };
+      });
+
+      appData = {
+        "그룹전체": groupTotal,
+        "광양사무지원": baseData["광양사무지원"],
+        "광양총무지원": mergedChongmu,
+        "광양차량지원": baseData["광양차량지원"]
+      };
+    }
+
+    function formatNumber(num) {
+      if (num === null || num === undefined) return "-";
+      return num === 0 ? "0" : num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function getProfitClass(val) {
+      return val > 0 ? "profit positive" : val < 0 ? "profit negative" : "profit";
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('tab-group').classList.toggle('active', mode === 'group');
+      document.getElementById('tab-section').classList.toggle('active', mode === 'section');
+      document.getElementById('section-buttons').style.display = mode === 'group' ? 'none' : 'flex';
+      document.getElementById('group-charts').style.display = mode === 'group' ? 'block' : 'none';
+      document.getElementById('section-charts').style.display = mode === 'group' ? 'none' : 'block';
+      updateDashboard();
+    }
+
+    function setSection(sec) {
+      currentSection = sec;
+      document.querySelectorAll('.sec-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`btn-${sec}`).classList.add('active');
+      updateDashboard();
+    }
+
+    function toggleDetail(index) {
+      const detailRow = document.getElementById(`detail-${index}`);
+      const icon = document.getElementById(`icon-${index}`);
+      if (!detailRow) return;
+
+      if (detailRow.style.display === 'table-row') {
+        detailRow.style.display = 'none';
+        if (icon) icon.innerText = '🔽';
+      } else {
+        detailRow.style.display = 'table-row';
+        if (icon) icon.innerText = '🔼';
+      }
+    }
+
+    function getInsightComment(curr, prev) {
+      if (!curr || curr.sales <= 0) {
+        return '데이터가 입력되지 않았습니다. 관리자 모드에서 수정 가능합니다.';
+      }
+
+      const opMargin = ((curr.op / curr.sales) * 100).toFixed(1);
+      const laborTotal = curr.cogs_labor + curr.sga_labor;
+      const laborRatio = curr.sales > 0 ? ((laborTotal / curr.sales) * 100).toFixed(1) : 0;
+
+      let text = `영업이익률 <b>${opMargin}%</b> 기록. `;
+      if (prev && prev.sales > 0) {
+        if (curr.op > prev.op) text += `전월비 <b class="good">수익성 개선</b>. `;
+        else if (curr.op < prev.op) text += `전월비 <b class="bad">수익성 하락</b>. `;
+        else text += `전월과 유사한 실적. `;
+      } else {
+        if (curr.op > 0) text += `<b class="good">흑자 출발</b>. `;
+        else if (curr.op < 0) text += `<b class="bad">적자 발생</b>. `;
+      }
+
+      if (laborRatio >= 50) text += `(노무비 비중 <b class="bad">${laborRatio}%</b> 주의)`;
+      else text += `(노무비 비중 <b>${laborRatio}%</b> 적정 유지)`;
+
+      return text;
+    }
+
+    function drawBarChart(containerId, data, key, positiveColor) {
+      const chartArea = document.getElementById(containerId);
+      chartArea.innerHTML = "";
+
+      const isOp = (key === "op");
+
+      const line = document.createElement("div");
+      line.style.position = "absolute";
+      line.style.left = "0";
+      line.style.right = "0";
+      line.style.height = "1px";
+      line.style.zIndex = "0";
+      
+      if (isOp) {
+        line.style.borderTop = "1px solid #999";
+        line.style.top = "calc(50% - 11px)"; 
+      } else {
+        line.style.borderTop = "1px dashed #cbd5e1";
+        line.style.bottom = "22px";
+      }
+      chartArea.appendChild(line);
+
+      const values = data.map(d => Math.abs(d[key]));
+      const maxVal = Math.max(...values, 1);
+
+      data.forEach(row => {
+        const val = row[key];
+        const isPositive = val >= 0;
+        const isEmpty = row.sales === 0 && row.cogs === 0 && row.sga === 0 && row.op === 0;
+
+        const col = document.createElement("div");
+        col.className = "bar-col";
+
+        const barWrapper = document.createElement("div");
+        barWrapper.className = "bar-wrapper";
+
+        let heightPercent = isEmpty ? 0 : (Math.abs(val) / maxVal) * 95;
+
+        const bar = document.createElement("div");
+        bar.className = isEmpty ? "bar bar-empty" : "bar";
+        bar.style.background = isEmpty ? "#cbd5e1" : (isPositive ? positiveColor : "var(--negative)");
+
+        if (isOp) {
+          bar.style.height = isEmpty ? "2px" : `${heightPercent / 2}%`;
+          if (isPositive) {
+            bar.style.bottom = "50%"; 
+            bar.style.borderRadius = "4px 4px 0 0";
+            bar.style.alignItems = "flex-start";
+            bar.style.paddingTop = "4px";
+          } else {
+            bar.style.top = "50%"; 
+            bar.style.borderRadius = "0 0 4px 4px";
+            bar.style.alignItems = "flex-end";
+            bar.style.paddingBottom = "4px";
+          }
+        } else {
+          bar.style.height = isEmpty ? "2px" : `${heightPercent}%`;
+          bar.style.bottom = "0";
+          bar.style.borderRadius = "4px 4px 0 0";
+          bar.style.alignItems = "flex-start";
+          bar.style.paddingTop = "4px";
+        }
+
+        bar.innerHTML = isEmpty ? '' : formatNumber(val);
+        barWrapper.appendChild(bar);
+
+        const labelArea = document.createElement("div");
+        labelArea.className = "bar-label";
+        labelArea.innerText = row.month;
+
+        col.appendChild(barWrapper);
+        col.appendChild(labelArea);
+        chartArea.appendChild(col);
+      });
+    }
+
+    function drawPieCharts() {
+      const getSum = (sec, key) => appData[sec].reduce((sum, d) => sum + d[key], 0);
+
+      const salesItems = [
+        { name: "광양사무지원", value: getSum("광양사무지원", "sales"), color: "var(--color-samu)" },
+        { name: "광양총무지원", value: getSum("광양총무지원", "sales"), color: "var(--color-chongmu)" },
+        { name: "광양차량지원", value: getSum("광양차량지원", "sales"), color: "var(--color-car)" }
+      ];
+      renderPie("pieChartSales", "pieLegendSales", salesItems, false);
+
+      const opItems = [
+        { name: "광양사무지원", value: Math.abs(getSum("광양사무지원", "op")), raw: getSum("광양사무지원", "op"), color: "var(--color-samu)" },
+        { name: "광양총무지원", value: Math.abs(getSum("광양총무지원", "op")), raw: getSum("광양총무지원", "op"), color: "var(--color-chongmu)" },
+        { name: "광양차량지원", value: Math.abs(getSum("광양차량지원", "op")), raw: getSum("광양차량지원", "op"), color: "var(--color-car)" }
+      ];
+      renderPie("pieChartOp", "pieLegendOp", opItems, true);
+    }
+
+    function renderPie(chartId, legendId, items, isOp) {
+      const total = items.reduce((sum, item) => sum + item.value, 0);
+      const chartEl = document.getElementById(chartId);
+      const legendEl = document.getElementById(legendId);
+
+      if (total > 0) {
+        let accum = 0;
+        const gradients = items.map(item => {
+          const start = accum;
+          const pct = (item.value / total) * 100;
+          accum += pct;
+          return `${item.color} ${start}% ${accum}%`;
+        }).join(", ");
+
+        chartEl.style.background = `conic-gradient(${gradients})`;
+        legendEl.innerHTML = items.map(item => {
+          const displayVal = isOp ? item.raw : item.value;
+          const colorClass = isOp && displayVal < 0 ? 'negative' : (isOp && displayVal > 0 ? 'positive' : '');
+          return `
+          <div class="legend-item">
+            <div class="legend-label"><span class="dot" style="background:${item.color}"></span>${item.name}</div>
+            <div class="legend-value">${((item.value / total) * 100).toFixed(1)}%<br><span class="${colorClass}">${formatNumber(displayVal)}</span></div>
+          </div>`;
+        }).join("");
+      } else {
+        chartEl.style.background = "#e2e8f0";
+        legendEl.innerHTML = `<div class="muted">데이터 없음</div>`;
+      }
+    }
+
+    function updateDashboard() {
+      processData();
+
+      const targetKey = currentMode === 'group' ? '그룹전체' : currentSection;
+      const data = appData[targetKey];
+
+      document.getElementById("tableTitle").innerText = `[${currentYear}] ${titleMap[targetKey]} 손익표`;
+
+      if (currentMode === 'section') {
+        document.getElementById("sectionSalesChartTitle").innerText = `📊 ${titleMap[targetKey]} 매출액 추이`;
+        document.getElementById("sectionOpChartTitle").innerText = `📈 ${titleMap[targetKey]} 영업이익 추이`;
+      }
+
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      let tSales = 0, tCogs = 0, tGp = 0, tSga = 0, tOp = 0;
+
+      data.forEach((row, idx) => {
+        tSales += row.sales; tCogs += row.cogs; tGp += row.gp; tSga += row.sga; tOp += row.op;
+
+        const tr = document.createElement("tr");
+        tr.className = "main-row";
+        tr.onclick = () => toggleDetail(idx);
+        tr.innerHTML = `
+          <td class="month-cell">${row.month} <span id="icon-${idx}" style="font-size:10px;">🔽</span></td>
+          <td>${formatNumber(row.sales)}</td>
+          <td>${formatNumber(row.cogs)}</td>
+          <td>${formatNumber(row.gp)}</td>
+          <td>${formatNumber(row.sga)}</td>
+          <td class="${getProfitClass(row.op)}">${formatNumber(row.op)}</td>
+        `;
+        tbody.appendChild(tr);
+
+        const aiComment = getInsightComment(row, idx > 0 ? data[idx - 1] : null);
+
+        const detailTr = document.createElement("tr");
+        detailTr.id = `detail-${idx}`;
+        detailTr.className = "detail-row";
+
+        if (currentMode === 'section' && isAdmin) {
+          detailTr.innerHTML = `
+            <td colspan="6" style="padding:0; border:none;">
+              <div class="edit-box" data-idx="${idx}">
+                <div class="edit-row"><label>매출액</label><input type="number" value="${row.sales}" /></div>
+                <div class="edit-row"><label>원가-노무비</label><input type="number" value="${row.cogs_labor}" /></div>
+                <div class="edit-row"><label>원가-경비</label><input type="number" value="${row.cogs_exp}" /></div>
+                <div class="edit-row"><label>판관-급여</label><input type="number" value="${row.sga_labor}" /></div>
+                <div class="edit-row"><label>판관-경비</label><input type="number" value="${row.sga_exp}" /></div>
+                <div class="edit-actions"><button class="save-btn" onclick="saveEdit(this, '${currentSection}', ${idx})">저장</button></div>
+              </div>
+              <div class="insight-box">${aiComment}</div>
+            </td>`;
+        } else {
+          detailTr.innerHTML = `
+            <td colspan="6" style="padding:0; border:none;">
+              <div class="detail-box">
+                <div class="d-row"><span class="d-title">🛒 매출원가 (${formatNumber(row.cogs)})</span>
+                <span class="d-value">노무비 <b>${formatNumber(row.cogs_labor)}</b> / 경비 <b>${formatNumber(row.cogs_exp)}</b></span></div>
+                <div class="d-row"><span class="d-title">🏢 판관비 (${formatNumber(row.sga)})</span>
+                <span class="d-value">급여 <b>${formatNumber(row.sga_labor)}</b> / 경비 <b>${formatNumber(row.sga_exp)}</b></span></div>
+                <div class="insight-box">${aiComment}</div>
+              </div>
+            </td>`;
+        }
+        tbody.appendChild(detailTr);
+      });
+
+      const totalTr = document.createElement("tr");
+      totalTr.className = "total-row";
+      totalTr.innerHTML = `
+        <td>합계</td>
+        <td>${formatNumber(tSales)}</td>
+        <td>${formatNumber(tCogs)}</td>
+        <td>${formatNumber(tGp)}</td>
+        <td>${formatNumber(tSga)}</td>
+        <td class="${getProfitClass(tOp)}">${formatNumber(tOp)}</td>
+      `;
+      tbody.appendChild(totalTr);
+
+      if (currentMode === 'group') {
+        // 새로 추가된 컬러 변수를 적용
+        drawBarChart("salesChartArea", data, "sales", "var(--color-sales-bar)");
+        drawBarChart("opChartArea", data, "op", "var(--positive)");
+        drawPieCharts();
+      } else {
+        // 새로 추가된 컬러 변수를 적용
+        drawBarChart("sectionSalesChartArea", data, "sales", "var(--color-sales-bar)");
+        drawBarChart("sectionOpChartArea", data, "op", "var(--positive)");
+      }
+    }
+
+    function saveEdit(btn, section, idx) {
+      const inputs = btn.closest('.edit-box').querySelectorAll('input');
+      const sales = Number(inputs[0].value || 0), cogs_labor = Number(inputs[1].value || 0);
+      const cogs_exp = Number(inputs[2].value || 0), sga_labor = Number(inputs[3].value || 0);
+      const sga_exp = Number(inputs[4].value || 0);
+
+      if ([sales, cogs_labor, cogs_exp, sga_labor, sga_exp].some(v => v < 0)) {
+        return alert("음수는 입력할 수 없습니다.");
+      }
+
+      const cogs = cogs_labor + cogs_exp, gp = sales - cogs, sga = sga_labor + sga_exp, op = gp - sga;
+      const target = section === '광양총무지원' ? baseData["광양총무지원_순수"] : baseData[section];
+
+      target[idx] = { ...target[idx], sales, cogs, gp, sga, op, cogs_labor, cogs_exp, sga_labor, sga_exp };
+
+      localStorage.setItem(`profitData_${currentYear}`, JSON.stringify(baseData));
+      updateDashboard();
+      
+      document.getElementById(`detail-${idx}`).style.display = 'table-row';
+      const icon = document.getElementById(`icon-${idx}`);
+      if (icon) icon.innerText = '🔼';
+      alert("저장되었습니다.");
+    }
+
+    window.onload = () => {
+      baseData = loadDataForYear(currentYear);
+      setMode('group');
+    };
+  </script>
+</body>
+</html>
