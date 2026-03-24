@@ -2,126 +2,231 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>P-Humans Profit Sheet</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- 기본 스타일 -->
+  <title>월별 손익 대시보드</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 0;
-      color: #222;
-    }
-
-    header {
-      background: #004790;
-      color: white;
-      padding: 16px;
-      font-weight: 700;
-      font-size: 18px;
-    }
-
-    main {
-      max-width: 720px;
-      margin: auto;
-      padding: 16px;
-    }
-
-    section {
-      background: white;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    h3 {
-      margin-top: 0;
-      margin-bottom: 12px;
-      font-size: 16px;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 8px;
-      font-size: 14px;
-      border-radius: 6px;
-      border: 1px solid #dbe0e4;
-    }
-
-    button {
-      background: #004790;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-    }
-
-    button:hover {
-      background: #005eb8;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 13px;
-    }
-
-    li {
-      padding: 8px 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .type-income { color: #059669; font-weight: 600; }
-    .type-expense { color: #dc2626; font-weight: 600; }
-
-    .amount {
-      float: right;
-      font-weight: 700;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    button { margin-right: 6px; padding: 6px 10px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: right; }
+    th { background: #f5f5f5; }
+    td:first-child, th:first-child { text-align: center; }
+    .edit-box input { width: 80px; }
+    .muted { color: #777; font-size: 12px; }
   </style>
 </head>
 <body>
 
-<header>
-  📊 P-Humans Profit Sheet
-</header>
+<h2>월별 손익 대시보드 <span class="muted">(단위: 백만원)</span></h2>
 
-<main>
+<!-- ✅ 섹션 탭 -->
+<div>
+  <button onclick="setMode('group')">그룹합계</button>
+  <button onclick="setMode('광양사무지원')">광양사무지원</button>
+  <button onclick="setMode('광양총무지원')">광양총무지원</button>
+  <button onclick="setMode('광양차량지원')">광양차량지원</button>
+</div>
 
-  <!-- ✅ 입력 영역 -->
-  <section>
-    <h3>내역 추가</h3>
+<br>
 
-    <input type="date" id="date" />
+<table id="dataTable">
+  <thead>
+    <tr>
+      <th>월</th>
+      <th>매출</th>
+      <th>원가</th>
+      <th>매출총이익</th>
+      <th>판관비</th>
+      <th>영업이익</th>
+      <th>관리</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-    <select id="type">
-      <option value="수입">수입</option>
-      <option value="지출">지출</option>
-    </select>
+<script>
+/* ===============================
+   ✅ 설정값
+================================ */
+const API_URL = "YOUR_APPS_SCRIPT_URL"; // ← 교체 필수
+const currentYear = "2026";
 
-    <input type="text" id="category" placeholder="카테고리 (예: 노무비, 차량유류)" />
-    <input type="number" id="amount" placeholder="금액" />
+let baseData = {};
+let currentSection = "group";
 
-    <input type="text" id="memo" placeholder="메모 (선택)" />
+/* ===============================
+   ✅ Google Sheet 데이터 조회
+================================ */
+async function fetchRecords() {
+  const res = await fetch(API_URL);
+  return await res.json();
+}
 
-    <button id="saveBtn">저장</button>
-  </section>
+/* ===============================
+   ✅ Sheet → 내부 데이터 변환
+================================ */
+function buildBaseDataFromSheet(records, year) {
+  const makeEmpty = () =>
+    Array.from({ length: 12 }, (_, i) => ({
+      month: `${i + 1}월`,
+      sales: 0, cogs: 0, gp: 0, sga: 0, op: 0,
+      cogs_labor: 0, cogs_exp: 0,
+      sga_labor: 0, sga_exp: 0
+    }));
 
-  <!-- ✅ 목록 영역 -->
-  <section>
-    <h3>내역 목록</h3>
-    <ul id="dataList"></ul>
-  </section>
+  const data = {
+    "광양사무지원": makeEmpty(),
+    "광양총무지원": makeEmpty(),
+    "광양차량지원": makeEmpty()
+  };
 
-</main>
+  records.forEach(r => {
+    if (!r["년월"] || !r["년월"].startsWith(year)) return;
+    if (!data[r["섹션"]]) return;
 
-<!-- ✅ JS는 항상 body 맨 아래 -->
-<script src="script.js"></script>
+    const m = Number(r["년월"].slice(5, 7)) - 1;
+
+    const t = data[r["섹션"]][m];
+
+    t.sales += Number(r["매출액"] || 0);
+    t.cogs_labor += Number(r["원가-노무비"] || 0);
+    t.cogs_exp += Number(r["원가-경비"] || 0);
+    t.sga_labor += Number(r["판관-급여"] || 0);
+    t.sga_exp += Number(r["판관-경비"] || 0);
+  });
+
+  Object.values(data).forEach(months => {
+    months.forEach(m => {
+      m.cogs = m.cogs_labor + m.cogs_exp;
+      m.gp = m.sales - m.cogs;
+      m.sga = m.sga_labor + m.sga_exp;
+      m.op = m.gp - m.sga;
+    });
+  });
+
+  return data;
+}
+
+/* ===============================
+   ✅ 그룹합계 계산
+================================ */
+function getGroupData() {
+  const result = Array.from({ length: 12 }, (_, i) => ({
+    month: `${i + 1}월`,
+    sales: 0, cogs: 0, gp: 0, sga: 0, op: 0
+  }));
+
+  Object.values(baseData).forEach(section => {
+    section.forEach((m, i) => {
+      result[i].sales += m.sales;
+      result[i].cogs += m.cogs;
+      result[i].gp += m.gp;
+      result[i].sga += m.sga;
+      result[i].op += m.op;
+    });
+  });
+
+  return result;
+}
+
+/* ===============================
+   ✅ 화면 렌더링
+================================ */
+function setMode(section) {
+  currentSection = section;
+  updateDashboard();
+}
+
+function updateDashboard() {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+
+  const rows = currentSection === "group"
+    ? getGroupData()
+    : baseData[currentSection];
+
+  rows.forEach((r, idx) => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${r.month}</td>
+      <td>${r.sales}</td>
+      <td>${r.cogs}</td>
+      <td>${r.gp}</td>
+      <td>${r.sga}</td>
+      <td>${r.op}</td>
+      <td>
+        ${currentSection !== "group"
+          ? `<button onclick="openEdit(${idx})">입력</button>`
+          : ""}
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    if (currentSection !== "group") {
+      const edit = document.createElement("tr");
+      edit.style.display = "none";
+      edit.id = `edit-${idx}`;
+      edit.innerHTML = `
+        <td colspan="7">
+          <div class="edit-box">
+            매출 <input><br>
+            원가-노무 <input><br>
+            원가-경비 <input><br>
+            판관-급여 <input><br>
+            판관-경비 <input><br>
+            <button onclick="saveEdit(${idx})">저장</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(edit);
+    }
+  });
+}
+
+/* ===============================
+   ✅ 관리자 입력
+================================ */
+function openEdit(idx) {
+  const row = document.getElementById(`edit-${idx}`);
+  row.style.display = row.style.display === "none" ? "table-row" : "none";
+}
+
+async function saveEdit(idx) {
+  const inputs = document
+    .querySelector(`#edit-${idx}`)
+    .querySelectorAll("input");
+
+  const payload = {
+    yearMonth: `${currentYear}-${String(idx + 1).padStart(2, "0")}`,
+    section: currentSection,   // ✅ 자동 섹션 반영
+    sales: Number(inputs[0].value || 0),
+    cogsLabor: Number(inputs[1].value || 0),
+    cogsExp: Number(inputs[2].value || 0),
+    sgaLabor: Number(inputs[3].value || 0),
+    sgaExp: Number(inputs[4].value || 0)
+  };
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+
+  alert("구글 시트에 저장되었습니다.");
+
+  const records = await fetchRecords();
+  baseData = buildBaseDataFromSheet(records, currentYear);
+  updateDashboard();
+}
+
+/* ===============================
+   ✅ 초기 로딩
+================================ */
+window.onload = async () => {
+  const records = await fetchRecords();
+  baseData = buildBaseDataFromSheet(records, currentYear);
+  setMode("group");
+};
+</script>
 
 </body>
 </html>
