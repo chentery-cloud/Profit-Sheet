@@ -1,7 +1,7 @@
 /* =====================================================
    ✅ 환경 설정
 ===================================================== */
-const API_URL = "YOUR_APPS_SCRIPT_URL";   // ← 반드시 교체
+const API_URL = "https://script.google.com/macros/s/AKfycbwdx3Wjm43IIGjhutF30SC5P2ZVIyS7WWQhhULXNQc5gEvzEHkUmdSixs1TbyM-5wzDjg/exec";   // ← 반드시 교체
 const currentYear = "2026";
 
 let baseData = {};
