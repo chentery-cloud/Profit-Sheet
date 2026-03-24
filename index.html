@@ -249,44 +249,61 @@
       }
     }
 
-    function buildBaseDataFromSheet(records, year) {
-      const makeEmpty = () => Array.from({ length: 12 }, (_, i) => ({
-        month: `${i + 1}월`,
-        sales: 0, cogs: 0, gp: 0, sga: 0, op: 0,
-        cogs_labor: 0, cogs_exp: 0, sga_labor: 0, sga_exp: 0
-      }));
+  function buildBaseDataFromSheet(records, year) {
+    const makeEmpty = () => Array.from({ length: 12 }, (_, i) => ({
+      month: `${i + 1}월`,
+      sales: 0, cogs: 0, gp: 0, sga: 0, op: 0,
+      cogs_labor: 0, cogs_exp: 0, sga_labor: 0, sga_exp: 0
+    }));
 
-      const data = {
-        "광양사무지원": makeEmpty(),
-        "광양총무지원": makeEmpty(),
-        "광양차량지원": makeEmpty()
-      };
+    const data = {
+      "광양사무지원": makeEmpty(),
+      "광양총무지원": makeEmpty(),
+      "광양차량지원": makeEmpty()
+    };
 
-      records.forEach(r => {
-        if (!r["년월"] || !r["년월"].startsWith(year)) return;
-        if (!data[r["섹션"]]) return;
+    if (!Array.isArray(records)) return data;
 
-        const m = Number(r["년월"].slice(5, 7)) - 1;
-        const t = data[r["섹션"]][m];
+    records.forEach(r => {
+      if (!r["년월"]) return;
 
-        t.sales += Number(r["매출액"] || 0);
-        t.cogs_labor += Number(r["원가-노무비"] || 0);
-        t.cogs_exp += Number(r["원가-경비"] || 0);
-        t.sga_labor += Number(r["판관-급여"] || 0);
-        t.sga_exp += Number(r["판관-경비"] || 0);
+      const dateStr = String(r["년월"]).trim(); // 예: "2026-02"
+      const sectionStr = String(r["섹션"]).trim();
+
+      if (!dateStr.startsWith(year)) return;
+      if (!data[sectionStr]) return;
+
+      // 💡 [핵심 수정] 2월 데이터가 1월로 가지 않도록, 뒤의 2자리 숫자를 정확히 빼냄
+      let mIndex = -1;
+      if (dateStr.length >= 7) { // "2026-02" (길이 7)
+        const monthPart = dateStr.slice(5, 7); // "02" 추출
+        mIndex = Number(monthPart) - 1; // "02" -> 숫자 2 -> 빼기 1 = 인덱스 1 (2월)
+      }
+
+      // 비정상적인 월 데이터면 건너뜀
+      if (isNaN(mIndex) || mIndex < 0 || mIndex > 11) return;
+
+      const t = data[sectionStr][mIndex];
+
+      t.sales += Number(r["매출액"] || 0);
+      t.cogs_labor += Number(r["원가-노무비"] || 0);
+      t.cogs_exp += Number(r["원가-경비"] || 0);
+      t.sga_labor += Number(r["판관-급여"] || 0);
+      t.sga_exp += Number(r["판관-경비"] || 0);
+    });
+
+    Object.values(data).forEach(months => {
+      months.forEach(m => {
+        m.cogs = m.cogs_labor + m.cogs_exp;
+        m.gp = m.sales - m.cogs;
+        m.sga = m.sga_labor + m.sga_exp;
+        m.op = m.gp - m.sga;
       });
+    });
+    
+    return data;
+  }
 
-      // 계산 필드 세팅
-      Object.values(data).forEach(months => {
-        months.forEach(m => {
-          m.cogs = m.cogs_labor + m.cogs_exp;
-          m.gp = m.sales - m.cogs;
-          m.sga = m.sga_labor + m.sga_exp;
-          m.op = m.gp - m.sga;
-        });
-      });
-      return data;
-    }
 
     function processData() {
       // 그룹 전체 합계 계산
