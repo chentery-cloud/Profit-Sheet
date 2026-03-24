@@ -1,5 +1,9 @@
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbxwdVHq0eg26DcQpFysPzCcHCQ8efzjWjJwTPoLtF8OiTPlQA7v7_gF4o7M7nJZE2QKNA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxwdVHq0eg26DcQpFysPzCcHCQ8efzjWjJwTPoLtF8OiTPlQA7v7_gF4o7M7nJZE2QKNA/exec";
+
+async function fetchSheetData() {
+  const res = await fetch(API_URL);
+  return await res.json();
+}
 
 /* =========================
    오늘 날짜 기본값
