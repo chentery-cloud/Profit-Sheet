@@ -1,118 +1,200 @@
-/*************************************************
- * Google Apps Script API
- *************************************************/
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbxwdVHq0eg26DcQpFysPzCcHCQ8efzjWjJwTPoLtF8OiTPlQA7v7_gF4o7M7nJZE2QKNA/exec";
+/* =====================================================
+   ✅ 환경 설정
+===================================================== */
+const API_URL = "YOUR_APPS_SCRIPT_URL";   // ← 반드시 교체
+const currentYear = "2026";
 
-/*************************************************
- * 날짜 기본값
- *************************************************/
-document.getElementById("date").value =
-  new Date().toISOString().slice(0, 10);
+let baseData = {};
+let currentSection = "group";
 
-/*************************************************
- * 저장 버튼
- *************************************************/
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const data = {
-    date: document.getElementById("date").value,
-    type: document.getElementById("type").value,
-    category: document.getElementById("category").value.trim(),
-    amount: document.getElementById("amount").value,
-    memo: document.getElementById("memo").value.trim()
-  };
-
-  if (!data.date || !data.category || !data.amount) {
-    alert("날짜 / 카테고리 / 금액은 필수입니다");
-    return;
-  }
-
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams(data)
-    });
-
-    const text = await res.text();
-    console.log("저장 응답:", text);
-
-    alert("저장 완료 ✅");
-
-    document.getElementById("amount").value = "";
-    document.getElementById("memo").value = "";
-
-    await loadAndRender();
-
-  } catch (err) {
-    console.error(err);
-    alert("저장 실패 ❌ 콘솔 확인");
-  }
-});
-
-/*************************************************
- * Sheet 데이터 불러오기
- *************************************************/
+/* =====================================================
+   ✅ Google Sheet 데이터 조회
+===================================================== */
 async function fetchRecords() {
   const res = await fetch(API_URL);
   return await res.json();
 }
 
-/*************************************************
- * 월별 합계 계산
- *************************************************/
-function buildMonthlySummary(records, year) {
-  const months = Array.from({ length: 12 }, (_, i) => ({
-    month: `${i + 1}월`,
-    income: 0,
-    expense: 0
-  }));
+/* =====================================================
+   ✅ Sheet → 내부 데이터 구조 변환
+===================================================== */
+function buildBaseDataFromSheet(records, year) {
+  const makeEmpty = () =>
+    Array.from({ length: 12 }, (_, i) => ({
+      month: `${i + 1}월`,
+      sales: 0,
+      cogs: 0,
+      gp: 0,
+      sga: 0,
+      op: 0,
+      cogs_labor: 0,
+      cogs_exp: 0,
+      sga_labor: 0,
+      sga_exp: 0
+    }));
+
+  const data = {
+    "광양사무지원": makeEmpty(),
+    "광양총무지원": makeEmpty(),
+    "광양차량지원": makeEmpty()
+  };
 
   records.forEach(r => {
-    if (!r.date || !r.date.startsWith(year)) return;
+    if (!r["년월"] || !r["년월"].startsWith(year)) return;
+    if (!data[r["섹션"]]) return;
 
-    const m = Number(r.date.slice(5, 7)) - 1;
-    const amt = Number(r.amount) || 0;
+    const monthIdx = Number(r["년월"].slice(5, 7)) - 1;
+    const target = data[r["섹션"]][monthIdx];
 
-    if (r.type === "수입") months[m].income += amt;
-    if (r.type === "지출") months[m].expense += amt;
+    target.sales += Number(r["매출액"] || 0);
+    target.cogs_labor += Number(r["원가-노무비"] || 0);
+    target.cogs_exp += Number(r["원가-경비"] || 0);
+    target.sga_labor += Number(r["판관-급여"] || 0);
+    target.sga_exp += Number(r["판관-경비"] || 0);
   });
 
-  return months;
+  Object.values(data).forEach(section => {
+    section.forEach(m => {
+      m.cogs = m.cogs_labor + m.cogs_exp;
+      m.gp = m.sales - m.cogs;
+      m.sga = m.sga_labor + m.sga_exp;
+      m.op = m.gp - m.sga;
+    });
+  });
+
+  return data;
 }
 
-/*************************************************
- * 목록 + 통계 출력
- *************************************************/
-async function loadAndRender() {
+/* =====================================================
+   ✅ 그룹 합계 계산
+===================================================== */
+function getGroupData() {
+  const result = Array.from({ length: 12 }, (_, i) => ({
+    month: `${i + 1}월`,
+    sales: 0,
+    cogs: 0,
+    gp: 0,
+    sga: 0,
+    op: 0
+  }));
+
+  Object.values(baseData).forEach(section => {
+    section.forEach((m, i) => {
+      result[i].sales += m.sales;
+      result[i].cogs += m.cogs;
+      result[i].gp += m.gp;
+      result[i].sga += m.sga;
+      result[i].op += m.op;
+    });
+  });
+
+  return result;
+}
+
+/* =====================================================
+   ✅ 화면 모드 전환
+===================================================== */
+function setMode(section) {
+  currentSection = section;
+  updateDashboard();
+}
+
+/* =====================================================
+   ✅ 테이블 렌더링
+===================================================== */
+function updateDashboard() {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+
+  const rows =
+    currentSection === "group"
+      ? getGroupData()
+      : baseData[currentSection];
+
+  rows.forEach((row, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.month}</td>
+      <td>${row.sales}</td>
+      <td>${row.cogs}</td>
+      <td>${row.gp}</td>
+      <td>${row.sga}</td>
+      <td>${row.op}</td>
+      <td>
+        ${
+          currentSection !== "group"
+            ? `<button onclick="toggleEdit(${idx})">입력</button>`
+            : ""
+        }
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    if (currentSection !== "group") {
+      const editTr = document.createElement("tr");
+      editTr.id = `edit-${idx}`;
+      editTr.style.display = "none";
+      editTr.innerHTML = `
+        <td colspan="7">
+          <div class="edit-box">
+            매출 <input><br>
+            원가-노무비 <input><br>
+            원가-경비 <input><br>
+            판관-급여 <input><br>
+            판관-경비 <input><br>
+            <button onclick="saveEdit(${idx})">저장</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(editTr);
+    }
+  });
+}
+
+/* =====================================================
+   ✅ 관리자 입력 UI
+===================================================== */
+function toggleEdit(idx) {
+  const tr = document.getElementById(`edit-${idx}`);
+  tr.style.display = tr.style.display === "none" ? "table-row" : "none";
+}
+
+/* =====================================================
+   ✅ Google Sheet 저장 (섹션 자동)
+===================================================== */
+async function saveEdit(idx) {
+  const inputs = document
+    .querySelector(`#edit-${idx}`)
+    .querySelectorAll("input");
+
+  const payload = {
+    yearMonth: `${currentYear}-${String(idx + 1).padStart(2, "0")}`,
+    section: currentSection, // ✅ 현재 탭 자동 반영
+    sales: Number(inputs[0].value || 0),
+    cogsLabor: Number(inputs[1].value || 0),
+    cogsExp: Number(inputs[2].value || 0),
+    sgaLabor: Number(inputs[3].value || 0),
+    sgaExp: Number(inputs[4].value || 0)
+  };
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+
+  alert("구글 시트에 저장되었습니다.");
+
+  // ✅ Sheet 기준으로 재로딩
   const records = await fetchRecords();
-
-  renderList(records);
-
-  const summary = buildMonthlySummary(records, "2026");
-  console.table(summary);
+  baseData = buildBaseDataFromSheet(records, currentYear);
+  updateDashboard();
 }
 
-/*************************************************
- * 내역 목록 표시
- *************************************************/
-function renderList(records) {
-  const ul = document.getElementById("dataList");
-  ul.innerHTML = "";
-
-  records.slice().reverse().forEach(r => {
-    const li = document.createElement("li");
-    li.textContent = `${r.date} | ${r.type} | ${r.category} | ${Number(
-      r.amount
-    ).toLocaleString()}원`;
-    ul.appendChild(li);
-  });
-}
-
-/*************************************************
- * 최초 로딩
- *************************************************/
-window.addEventListener("load", loadAndRender);
-
+/* =====================================================
+   ✅ 초기 로딩
+===================================================== */
+window.onload = async () => {
+  const records = await fetchRecords();
+  baseData = buildBaseDataFromSheet(records, currentYear);
+  setMode("group");
+};
