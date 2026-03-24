@@ -1,4 +1,4 @@
-const API_URL = "여기에_웹앱_URL";
+const API_URL = "https://script.google.com/macros/s/AKfycbxFUnKylYPnsFfkh1TlBB6H2PdGvQ6BoDoMPi9GkN_dQgA8SjtMzBz98YUAfvR1-RLhSQ/exec";
 
 // 오늘 날짜 기본값
 document.getElementById("date").value =
