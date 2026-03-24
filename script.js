@@ -1,5 +1,5 @@
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxFUnKylYPnsFfkh1TlBB6H2PdGvQ6BoDoMPi9GkN_dQgA8SjtMzBz98YUAfvR1-RLhSQ/exec";
+  "https://script.google.com/macros/s/AKfycbxwdVHq0eg26DcQpFysPzCcHCQ8efzjWjJwTPoLtF8OiTPlQA7v7_gF4o7M7nJZE2QKNA/exec";
 
 /* =========================
    오늘 날짜 기본값
