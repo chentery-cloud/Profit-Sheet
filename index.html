@@ -117,6 +117,18 @@
     .dot { width: 12px; height: 12px; border-radius: 3px; }
     .legend-value { font-weight: 700; text-align: right; color: var(--text); }
 
+    /* ✅ 새로 추가된 요약 카드 (Grid) 스타일 */
+    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+    .summary-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; }
+    .summary-card.group-card { background: #f0f6fc; border: 1px solid #cce0f5; } /* 그룹 전체 카드는 색상을 다르게 강조 */
+    .summary-title { font-size: 13px; color: var(--sub); font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .summary-value { font-size: 18px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .summary-value.pos { color: var(--primary); }
+    .summary-value.neg { color: var(--negative); }
+    .summary-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; align-self: center; }
+    .badge-pos { background: #e0f2fe; color: var(--primary-light); }
+    .badge-neg { background: #fee2e2; color: var(--negative); }
+
     @media (max-width: 520px) {
       .pie-wrapper { flex-direction: column; align-items: center; }
       .legend { width: 100%; }
@@ -124,6 +136,8 @@
       table { font-size: 12px; }
       th, td { padding: 10px 2px; }
       .header-title { font-size: 16px; }
+      /* 모바일에서도 2x2 유지 */
+      .summary-value { font-size: 16px; }
     }
   </style>
 </head>
@@ -193,9 +207,11 @@
           <div class="legend" id="pieLegendSales"></div>
       </div></div>
 
-      <!-- ✅ [변경점] 도넛 차트를 버리고 막대 그래프용 div로 변경 -->
-      <div class="card-header" style="margin-top:24px;"><h3>📊 섹션별 누적 영업이익 (흑/적자 구분)</h3></div>
-      <div style="margin-bottom:24px;"><div class="chart-container" id="sectionOpTotalArea"></div></div>
+      <!-- ✅ [완전 교체] 막대 그래프 대신 대시보드 요약 카드(2x2) 적용 -->
+      <div class="card-header" style="margin-top:24px;"><h3>🏆 누적 영업이익 요약 (그룹+섹션)</h3></div>
+      <div id="opSummaryArea" class="summary-grid">
+        <!-- JS에서 카드가 동적으로 생성됩니다 -->
+      </div>
     </div>
 
     <!-- ✅ 섹션 차트 영역 -->
@@ -498,7 +514,7 @@
         drawBarChart("salesChartArea", data, "sales", "var(--color-sales-bar)");
         drawBarChart("opChartArea", data, "op", "var(--positive)");
         drawSalesPie();
-        drawSectionOpTotalChart(); // ✅ 새로 추가된 영업이익 막대그래프
+        drawOpSummaryCards(); // ✅ 대시보드 요약 카드 그리기
       } else {
         drawBarChart("sectionSalesChartArea", data, "sales", "var(--color-sales-bar)");
         drawBarChart("sectionOpChartArea", data, "op", "var(--positive)");
@@ -544,7 +560,6 @@
       
       const isOp = (key === "op");
       
-      // 기준선 그리기 (영업이익은 중앙, 매출은 하단)
       const line = document.createElement("div");
       line.style.position = "absolute"; line.style.left = "0"; line.style.right = "0"; line.style.height = "1px"; line.style.zIndex = "0";
       if (isOp) { 
@@ -570,7 +585,6 @@
         bar.className = isEmpty ? "bar bar-empty" : "bar";
         bar.style.background = isEmpty ? "#cbd5e1" : (isPositive ? positiveColor : "var(--negative)");
 
-        // 위치 잡기
         if (isOp) {
           bar.style.height = isEmpty ? "2px" : `${heightPercent / 2}%`;
           if (isPositive) { 
@@ -625,55 +639,45 @@
     }
 
     /* ===============================
-       ✅ 섹션별 누적 영업이익 막대 차트 (도넛 대체)
+       ✅ NEW: 대시보드 요약 카드 (그룹 + 섹션별 누적 이익)
     ================================ */
-    function drawSectionOpTotalChart() {
-      const container = document.getElementById("sectionOpTotalArea");
-      if (!container) return;
-      container.innerHTML = "";
+    function drawOpSummaryCards() {
+      const area = document.getElementById("opSummaryArea");
+      area.innerHTML = "";
 
       const getSum = sec => appData[sec].reduce((s, d) => s + d.op, 0);
-      const data = [
-        { name: "사무지원", val: getSum("광양사무지원") },
-        { name: "총무지원", val: getSum("광양총무지원") },
-        { name: "차량지원", val: getSum("광양차량지원") }
+      
+      // 4개의 카드 데이터 구성
+      const cardsData = [
+        { title: "🏢 그룹 전체 누적", val: getSum("그룹전체"), isGroup: true },
+        { title: "📋 사무지원", val: getSum("광양사무지원"), isGroup: false },
+        { title: "💼 총무지원", val: getSum("광양총무지원"), isGroup: false },
+        { title: "🚗 차량지원", val: getSum("광양차량지원"), isGroup: false }
       ];
 
-      // 0 기준선 (중앙)
-      const line = document.createElement("div");
-      line.style.cssText = "position:absolute; left:0; right:0; top:calc(50% - 11px); border-top:1px solid #999; z-index:0;";
-      container.appendChild(line);
-
-      const maxVal = Math.max(...data.map(d => Math.abs(d.val)), 1);
-
-      data.forEach(item => {
-        const isPos = item.val >= 0;
-        const heightPct = (Math.abs(item.val) / maxVal) * 95;
-
-        const col = document.createElement("div"); col.className = "bar-col";
-        const wrapper = document.createElement("div"); wrapper.className = "bar-wrapper";
-        const bar = document.createElement("div");
+      cardsData.forEach(item => {
+        const isPos = item.val > 0;
+        const isNeg = item.val < 0;
         
-        bar.className = "bar";
-        bar.style.background = isPos ? "var(--primary)" : "var(--negative)";
-        bar.style.height = `${heightPct / 2}%`;
+        // 부호 추가 (+, -)
+        let displayVal = formatNumber(Math.abs(item.val));
+        if (isPos) displayVal = "+" + displayVal;
+        else if (isNeg) displayVal = "-" + displayVal;
 
-        if (isPos) {
-          bar.style.bottom = "50%"; bar.style.borderRadius = "4px 4px 0 0"; bar.style.alignItems = "flex-start"; bar.style.paddingTop = "4px";
-        } else {
-          bar.style.top = "50%"; bar.style.borderRadius = "0 0 4px 4px"; bar.style.alignItems = "flex-end"; bar.style.paddingBottom = "4px";
-        }
-        bar.innerHTML = formatNumber(item.val);
-        
-        wrapper.appendChild(bar);
-        col.appendChild(wrapper);
+        // 색상 및 뱃지 텍스트
+        const valClass = isPos ? "pos" : isNeg ? "neg" : "";
+        const badgeClass = isPos ? "badge-pos" : isNeg ? "badge-neg" : "";
+        const badgeText = isPos ? "🔵 흑자 유지" : isNeg ? "🔴 적자 발생" : "⚫ 실적 없음";
 
-        const lbl = document.createElement("div"); 
-        lbl.className = "bar-label"; 
-        lbl.innerText = item.name;
-        col.appendChild(lbl);
+        const card = document.createElement("div");
+        card.className = `summary-card ${item.isGroup ? "group-card" : ""}`;
         
-        container.appendChild(col);
+        card.innerHTML = `
+          <div class="summary-title">${item.title}</div>
+          <div class="summary-value ${valClass}">${displayVal}</div>
+          <div class="summary-badge ${badgeClass}">${badgeText}</div>
+        `;
+        area.appendChild(card);
       });
     }
 
