@@ -2,12 +2,11 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>P-Humans Profit Sheet</title>
+  <title>P-Humans 통합 대시보드</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* 포스코 그룹 디자인 테마 적용 */
     :root {
       --primary: #004790;
       --primary-light: #005eb8;
@@ -27,666 +26,489 @@
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
 
-    /* 로딩 오버레이 */
-    #loadingOverlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255,255,255,0.8); z-index: 9999;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      font-weight: 700; color: var(--primary); font-size: 16px;
-    }
+    /* 로딩 */
+    #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: 700; color: var(--primary); }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* 상단 헤더 */
+    /* 헤더 */
     header { background: var(--primary); color: white; padding: 16px 20px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-title { font-size: 18px; font-weight: 700; }
-    .year-select { background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px; padding: 6px 10px; font-size: 14px; font-weight: 600; cursor: pointer; outline: none; }
+    .header-title { font-size: 16px; font-weight: 700; }
+    .year-select { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 10px; font-size: 14px; outline: none; margin-left:10px; font-weight:600;}
     .year-select option { color: var(--text); background: white; }
-    .admin-btn { background: white; color: var(--primary); border: none; border-radius: 6px; font-size: 12px; font-weight: 700; padding: 8px 12px; cursor: pointer; transition: background 0.2s; }
-    .admin-btn:hover { background: #f1f5f9; }
+    .admin-btn { background: white; color: var(--primary); border: none; border-radius: 6px; font-size: 12px; font-weight: 700; padding: 8px 12px; cursor: pointer; }
 
-    /* 컨테이너 및 탭 */
-    .container { padding: 20px 16px; max-width: 760px; margin: auto; }
-    .tabs { display: flex; background: #e9ecef; border-radius: 8px; padding: 4px; margin-bottom: 16px; }
-    .tab-btn { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: 700; color: var(--sub); background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .container { padding: 16px; max-width: 760px; margin: auto; }
+
+    /* 3단 탭 */
+    .tabs { display: flex; background: #e9ecef; border-radius: 8px; padding: 4px; margin-bottom: 16px; gap: 4px; }
+    .tab-btn { flex: 1; text-align: center; padding: 12px 4px; font-size: 13px; font-weight: 700; color: var(--sub); background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; word-break: keep-all; }
     .tab-btn.active { background: var(--card); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
     .section-buttons { display: none; gap: 8px; margin-bottom: 16px; }
-    .sec-btn { flex: 1; padding: 12px 0; font-size: 13px; font-weight: 700; background: var(--card); color: var(--sub); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-    .sec-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(0,71,144,0.2); }
+    .sec-btn { flex: 1; padding: 12px 0; font-size: 13px; font-weight: 700; background: var(--card); color: var(--sub); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+    .sec-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-    /* 카드 및 테이블 */
+    /* 카드 공통 */
     .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.04); border: 1px solid var(--border); }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
-    h3 { margin: 0; font-size: 16px; color: var(--primary); letter-spacing: -0.5px; }
-    .subtitle { font-size: 12px; color: var(--sub); margin-top: -6px; margin-bottom: 16px; }
-
+    h3 { margin: 0; font-size: 16px; color: var(--primary); }
+    
+    /* 손익 테이블 */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 12px 4px; text-align: right; }
-    th:first-child, td:first-child { text-align: left; font-weight: 600; }
+    th, td { padding: 12px 4px; text-align: right; border-bottom: 1px solid #f1f5f9; }
+    th:first-child, td:first-child { text-align: left; }
     th { color: var(--sub); border-bottom: 2px solid var(--primary-light); font-weight: 700; }
-    .profit { font-weight: 700; font-size: 14px; }
+    .profit { font-weight: 700; }
     .positive { color: var(--positive); }
     .negative { color: var(--negative); }
-    
-    .main-row { cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
+    .main-row { cursor: pointer; transition: background 0.2s; }
     .main-row:hover { background: #f8fafc; }
-    .month-cell { color: var(--primary); display: flex; align-items: center; gap: 4px; }
+    .month-cell { color: var(--primary); font-weight:600; }
     .detail-row { display: none; }
-    .total-row td { background: #f1f3f5; font-weight: 700; color: var(--text); border-top: 2px solid var(--sub); border-bottom: none; }
-    .total-row td:first-child { text-align: center; }
+    .total-row td { background: #f1f3f5; font-weight: 700; border-top: 2px solid var(--sub); }
 
-    /* 입력 폼 및 디테일 박스 */
-    .detail-box { background: #f8f9fa; border-radius: 8px; padding: 14px; margin: 4px 0 12px 0; font-size: 12px; border: 1px solid var(--border); }
-    .d-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #dbe0e4; gap: 8px; }
-    .d-row:last-child { border-bottom: none; }
-    .d-title { font-weight: 700; color: var(--text); }
-    .d-value { color: var(--sub); text-align: right; }
-    .d-value b { color: var(--text); }
-
-    .insight-box { background: #f0f6fc; border: 1px solid #cce0f5; border-radius: 6px; padding: 12px; margin-top: 10px; font-size: 12px; color: var(--primary); line-height: 1.5; }
-    .insight-box b { color: var(--primary); font-weight: 700; }
-    .insight-box .bad { color: var(--negative); }
-    .insight-box .good { color: var(--positive); }
-
-    .edit-box { display: grid; gap: 8px; margin-top: 10px; background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
-    .edit-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .edit-row label { font-size: 12px; color: var(--sub); font-weight: 600; flex: 1; }
-    .edit-row input { width: 140px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: right; font-size: 13px; }
-    .edit-actions { display: flex; gap: 8px; margin-top: 8px; }
-    .save-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; background: var(--primary); color: white; }
-    .muted { color: var(--sub); font-size: 12px; font-weight: normal; }
-
-    /* 차트 영역 */
-    .chart-container { height: 220px; display: flex; align-items: stretch; gap: 6px; padding-top: 10px; position: relative; width: 100%; }
+    /* 차트 CSS 복구 */
+    .chart-container { height: 180px; display: flex; align-items: stretch; gap: 6px; padding-top: 10px; position: relative; width: 100%; }
     .bar-col { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; }
     .bar-wrapper { flex: 1; position: relative; margin-bottom: 22px; }
-    .bar { position: absolute; width: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: 700; text-align: center; word-break: break-all; transition: height 0.3s, bottom 0.3s, top 0.3s; }
+    .bar { position: absolute; width: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: 700; text-align: center; transition: all 0.3s; }
     .bar-empty { background: #cbd5e1 !important; color: transparent; height: 2px !important; }
-    .bar-label { text-align: center; font-size: 11px; color: var(--sub); font-weight: 600; position: absolute; bottom: 0; width: 100%; height: 20px; letter-spacing: -0.5px; }
-
-    /* 파이 차트 */
-    .pie-container { margin-bottom: 24px; }
+    .bar-label { text-align: center; font-size: 11px; color: var(--sub); font-weight: 600; position: absolute; bottom: 0; width: 100%; height: 20px; }
+    
     .pie-wrapper { display: flex; align-items: center; gap: 24px; padding: 10px 0; flex-wrap: wrap; }
-    .donut-chart { width: 140px; height: 140px; border-radius: 50%; background: #e2e8f0; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); flex-shrink: 0; }
-    .donut-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 74px; height: 74px; background: var(--card); border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 700; color: var(--sub); }
-    .legend { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 180px; }
-    .legend-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; gap: 10px; }
-    .legend-label { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text); }
-    .dot { width: 12px; height: 12px; border-radius: 3px; }
-    .legend-value { font-weight: 700; text-align: right; color: var(--text); }
+    .donut-chart { width: 120px; height: 120px; border-radius: 50%; background: #e2e8f0; position: relative; }
+    .donut-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; background: var(--card); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--sub); }
+    .legend { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 150px; }
+    .legend-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .dot { width: 12px; height: 12px; border-radius: 3px; display:inline-block; margin-right:6px;}
 
-    /* ✅ 새로 추가된 요약 카드 (Grid) 스타일 */
-    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-    .summary-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; }
-    .summary-card.group-card { background: #f0f6fc; border: 1px solid #cce0f5; } /* 그룹 전체 카드는 색상을 다르게 강조 */
-    .summary-title { font-size: 13px; color: var(--sub); font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
-    .summary-value { font-size: 18px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-    .summary-value.pos { color: var(--primary); }
-    .summary-value.neg { color: var(--negative); }
+    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .summary-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+    .summary-card.group-card { background: #f0f6fc; border: 1px solid #cce0f5; }
+    .summary-title { font-size: 13px; color: var(--sub); font-weight: 700; margin-bottom: 8px; }
+    .summary-value { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
     .summary-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; align-self: center; }
     .badge-pos { background: #e0f2fe; color: var(--primary-light); }
     .badge-neg { background: #fee2e2; color: var(--negative); }
 
-    @media (max-width: 520px) {
-      .pie-wrapper { flex-direction: column; align-items: center; }
-      .legend { width: 100%; }
-      .edit-row input { width: 120px; }
-      table { font-size: 12px; }
-      th, td { padding: 10px 2px; }
-      .header-title { font-size: 16px; }
-      /* 모바일에서도 2x2 유지 */
-      .summary-value { font-size: 16px; }
-    }
+    /* 편집 박스 */
+    .edit-box { display: grid; gap: 8px; background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 10px; }
+    .edit-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .edit-row label { font-size: 12px; color: var(--sub); font-weight: 600; flex: 1; }
+    .edit-row input { width: 100px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: right; font-size: 13px; }
+    .save-btn { width: 100%; padding: 10px; font-size: 13px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; background: var(--primary); color: white; margin-top: 8px; }
+
+    /* HR(인원) 화면 디자인 */
+    .hr-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+    .hr-group { background: #f0f9ff; border-color: #bae6fd; }
+    .hr-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; border-bottom: 1px dashed #cbd5e1; padding-bottom:8px;}
+    .hr-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 8px; }
+    .hr-label { color: var(--sub); font-weight: 600; }
+    .hr-val { font-weight: 800; color: var(--text); font-size: 15px; }
+    .hr-sub { font-size: 12px; color: #94a3b8; font-weight: normal; margin-left: 4px; }
+    .hr-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; background: var(--primary); color: white; margin-left: 8px; }
+    
+    .hr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px; }
+    .hr-input-group label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 4px; font-weight:600;}
+    .hr-input-group input { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; text-align: center; }
+
+    .view-section { display: none; }
+    .view-section.active { display: block; }
   </style>
 </head>
 <body>
   
-  <!-- 로딩 오버레이 -->
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <div id="loadingText">데이터를 불러오는 중입니다...</div>
-  </div>
+  <div id="loadingOverlay"><div class="spinner"></div><div>데이터 불러오는 중...</div></div>
 
   <header>
-    <div class="header-left">
-      <div class="header-title">📈 Profit Sheet</div>
-      <select id="yearSelect" class="year-select" onchange="changeYear()">
+    <div style="display:flex; align-items:center;">
+      <div class="header-title">🏢 광양서비스지원그룹</div>
+      <select id="yearSelect" class="year-select" onchange="loadData()">
         <option value="2026" selected>2026년</option>
       </select>
     </div>
-    <button class="admin-btn" onclick="toggleAdmin()" id="adminBtn">관리자 로그인</button>
+    <button class="admin-btn" onclick="toggleAdmin()" id="adminBtn">관리자 모드</button>
   </header>
 
   <div class="container">
+    <!-- 3단 탭 -->
     <div class="tabs">
-      <button id="tab-group" class="tab-btn active" onclick="setMode('group')">🏢 그룹 합계</button>
-      <button id="tab-section" class="tab-btn" onclick="setMode('section')">📊 섹션별 조회</button>
+      <button id="tab-group" class="tab-btn active" onclick="setMode('group')">🏢 그룹매출</button>
+      <button id="tab-section" class="tab-btn" onclick="setMode('section')">📊 섹션매출</button>
+      <button id="tab-personnel" class="tab-btn" onclick="setMode('personnel')">👥 인원 현황</button>
     </div>
 
+    <!-- 섹션 버튼 -->
     <div id="section-buttons" class="section-buttons">
-      <button id="btn-광양사무지원" class="sec-btn active" onclick="setSection('광양사무지원')">광양사무지원</button>
-      <button id="btn-광양총무지원" class="sec-btn" onclick="setSection('광양총무지원')">광양총무지원</button>
-      <button id="btn-광양차량지원" class="sec-btn" onclick="setSection('광양차량지원')">광양차량지원</button>
+      <button id="btn-광양사무지원" class="sec-btn active" onclick="setSection('광양사무지원')">사무지원</button>
+      <button id="btn-광양총무지원" class="sec-btn" onclick="setSection('광양총무지원')">총무지원</button>
+      <button id="btn-광양차량지원" class="sec-btn" onclick="setSection('광양차량지원')">차량지원</button>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <h3 id="tableTitle">🏢 광양서비스지원그룹 손익표</h3>
-        <span class="muted">단위: 백만원</span>
+    <!-- 💰 View 1: 매출/손익 뷰 -->
+    <div id="view-profit" class="view-section active">
+      <div class="card">
+        <div class="card-header"><h3 id="tableTitleProfit">🏢 그룹 손익표</h3><span style="font-size:12px;color:gray;">단위: 백만원</span></div>
+        <table style="margin-bottom:10px;">
+          <thead><tr><th>월</th><th>매출</th><th>원가</th><th>판관비</th><th>영업이익</th></tr></thead>
+          <tbody id="tableBodyProfit"></tbody>
+        </table>
       </div>
-      <p class="subtitle">💡 월을 클릭하면 상세 분석 및 입력창이 열립니다.</p>
 
-      <table>
-        <thead>
-          <tr>
-            <th>월</th>
-            <th>매출액</th>
-            <th>매출원가</th>
-            <th>매출총이익</th>
-            <th>판관비</th>
-            <th>영업이익</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+      <!-- 그룹 매출 차트 -->
+      <div id="group-charts" class="card">
+        <div class="card-header"><h3>📊 그룹 매출액 추이</h3></div>
+        <div style="margin-bottom:24px;"><div class="chart-container" id="grpSalesChart"></div></div>
+        
+        <div class="card-header"><h3>📈 그룹 영업이익 추이</h3></div>
+        <div style="margin-bottom:24px;"><div class="chart-container" id="grpOpChart"></div></div>
+        
+        <div class="card-header"><h3>🍩 섹션별 누적 매출 비중</h3></div>
+        <div class="pie-wrapper">
+            <div class="donut-chart" id="pieChartSales"><div class="donut-inner">매출<br>비중</div></div>
+            <div class="legend" id="pieLegendSales"></div>
+        </div>
 
-    <!-- ✅ 그룹 차트 영역 -->
-    <div id="group-charts" class="card">
-      <div class="card-header"><h3>📊 매출액 추이</h3></div>
-      <div style="margin-bottom:24px;"><div class="chart-container" id="salesChartArea"></div></div>
+        <div class="card-header" style="margin-top:24px;"><h3>🏆 누적 영업이익 요약</h3></div>
+        <div id="opSummaryArea" class="summary-grid"></div>
+      </div>
 
-      <div class="card-header"><h3>📈 영업이익 추이</h3></div>
-      <div style="margin-bottom:24px;"><div class="chart-container" id="opChartArea"></div></div>
+      <!-- 섹션 매출 차트 -->
+      <div id="section-charts" class="card" style="display:none;">
+        <div class="card-header"><h3 id="secSalesTitle">📊 매출액 추이</h3></div>
+        <div style="margin-bottom:24px;"><div class="chart-container" id="secSalesChart"></div></div>
 
-      <div class="card-header" style="margin-top:24px;"><h3>🍩 섹션별 누적 매출 비중</h3></div>
-      <div class="pie-container"><div class="pie-wrapper">
-          <div class="donut-chart" id="pieChartSales"><div class="donut-inner">매출<br>비중</div></div>
-          <div class="legend" id="pieLegendSales"></div>
-      </div></div>
-
-      <!-- ✅ [완전 교체] 막대 그래프 대신 대시보드 요약 카드(2x2) 적용 -->
-      <div class="card-header" style="margin-top:24px;"><h3>🏆 누적 영업이익 요약 (그룹+섹션)</h3></div>
-      <div id="opSummaryArea" class="summary-grid">
-        <!-- JS에서 카드가 동적으로 생성됩니다 -->
+        <div class="card-header"><h3 id="secOpTitle">📈 영업이익 추이</h3></div>
+        <div class="chart-container" id="secOpChart"></div>
       </div>
     </div>
 
-    <!-- ✅ 섹션 차트 영역 -->
-    <div id="section-charts" class="card" style="display:none;">
-      <div class="card-header"><h3 id="sectionSalesChartTitle">📊 매출액 추이</h3></div>
-      <div style="margin-bottom:24px;"><div class="chart-container" id="sectionSalesChartArea"></div></div>
-
-      <div class="card-header"><h3 id="sectionOpChartTitle">📈 영업이익 추이</h3></div>
-      <div class="chart-container" id="sectionOpChartArea"></div>
+    <!-- 👥 View 2: 인원 현황 -->
+    <div id="view-personnel" class="view-section">
+      <div style="margin-bottom:12px; font-size:13px; color:var(--sub); text-align:right;">
+        💡 장애인 산정: 남성중증x2, 남성경증x0.5 / 여성중증x2, 여성경증x1
+      </div>
+      <div id="hrCardsContainer"></div>
     </div>
   </div>
 
   <script>
-    /* ===============================
-       ✅ API 및 환경 설정
-    ================================ */
-    const API_URL = "https://script.google.com/macros/s/AKfycbwFOAmLm7FnwZZLqvpps_200YYOgVHbfBd9eSqd33F-24nTx4lyZrLaUXxoAvPUpp2oog/exec";
+    // ⚠️ 새 API 주소 필수 입력!
+    const API_URL = "https://script.google.com/macros/s/AKfycbydqBnP9JrPPdqtonK9aCjevFbaov-S6EkEDU-VjPVblcr3-GeAuPShvV8Z1x1f3xIQVQ/exec";
     
     let isAdmin = false;
-    const ADMIN_PASS = "admin1234";
-    let currentYear = "2026";
-
-    let baseData = {};
-    let appData = {};
-    let currentMode = 'group';
+    let currentMode = 'group'; 
     let currentSection = '광양사무지원';
 
-    const titleMap = {
-      "그룹전체": "🏢 광양서비스지원그룹",
-      "광양사무지원": "📋 광양사무지원섹션",
-      "광양총무지원": "💼 광양총무지원섹션",
-      "광양차량지원": "🚗 광양차량지원섹션"
+    let profitBase = {}, profitApp = {};
+    let hrData = { 
+      "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, 
+      "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, 
+      "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} 
     };
 
-    /* ===============================
-       ✅ 로딩 및 데이터 가져오기
-    ================================ */
-    function showLoading(show, text = "데이터를 불러오는 중입니다...") {
-      const overlay = document.getElementById('loadingOverlay');
-      document.getElementById('loadingText').innerText = text;
-      overlay.style.display = show ? 'flex' : 'none';
-    }
-
-    async function loadData() {
-      showLoading(true, "데이터를 불러오는 중입니다...");
-      try {
-        const res = await fetch(API_URL);
-        const records = await res.json();
-        baseData = buildBaseDataFromSheet(records, currentYear);
-        updateDashboard();
-      } catch (e) {
-        alert("데이터를 불러오는데 실패했습니다.");
-      } finally {
-        showLoading(false);
-      }
-    }
-
-    /* ===============================
-       ✅ 데이터 가공
-    ================================ */
-    function buildBaseDataFromSheet(records, year) {
-      const makeEmpty = () => Array.from({ length: 12 }, (_, i) => ({
-        month: `${i + 1}월`,
-        sales: 0, cogs: 0, gp: 0, sga: 0, op: 0,
-        cogs_labor: 0, cogs_exp: 0, sga_labor: 0, sga_exp: 0
-      }));
-
-      const data = {
-        "광양사무지원": makeEmpty(),
-        "광양총무지원": makeEmpty(),
-        "광양차량지원": makeEmpty()
-      };
-
-      if (!Array.isArray(records)) return data;
-
-      records.forEach(r => {
-        if (!r["년월"]) return;
-        const dateStr = String(r["년월"]).trim(); 
-        const sectionStr = String(r["섹션"]).trim();
-
-        if (!dateStr.startsWith(year) || !data[sectionStr]) return;
-
-        let mIndex = -1;
-        if (dateStr.length >= 7) { 
-          mIndex = Number(dateStr.slice(5, 7)) - 1; 
-        }
-        if (isNaN(mIndex) || mIndex < 0 || mIndex > 11) return;
-
-        const t = data[sectionStr][mIndex];
-        t.sales += Number(r["매출액"] || 0);
-        t.cogs_labor += Number(r["원가-노무비"] || 0);
-        t.cogs_exp += Number(r["원가-경비"] || 0);
-        t.sga_labor += Number(r["판관-급여"] || 0);
-        t.sga_exp += Number(r["판관-경비"] || 0);
-      });
-
-      Object.values(data).forEach(months => {
-        months.forEach(m => {
-          m.cogs = m.cogs_labor + m.cogs_exp;
-          m.gp = m.sales - m.cogs;
-          m.sga = m.sga_labor + m.sga_exp;
-          m.op = m.gp - m.sga;
-        });
-      });
-      return data;
-    }
-
-    function processData() {
-      const groupTotal = baseData["광양사무지원"].map((item, i) => {
-        const ch = baseData["광양총무지원"][i];
-        const ca = baseData["광양차량지원"][i];
-        return {
-          month: item.month,
-          sales: item.sales + ch.sales + ca.sales,
-          cogs: item.cogs + ch.cogs + ca.cogs,
-          gp: item.gp + ch.gp + ca.gp,
-          sga: item.sga + ch.sga + ca.sga,
-          op: item.op + ch.op + ca.op,
-          cogs_labor: item.cogs_labor + ch.cogs_labor + ca.cogs_labor,
-          cogs_exp: item.cogs_exp + ch.cogs_exp + ca.cogs_exp,
-          sga_labor: item.sga_labor + ch.sga_labor + ca.sga_labor,
-          sga_exp: item.sga_exp + ch.sga_exp + ca.sga_exp
-        };
-      });
-
-      appData = {
-        "그룹전체": groupTotal,
-        "광양사무지원": baseData["광양사무지원"],
-        "광양총무지원": baseData["광양총무지원"],
-        "광양차량지원": baseData["광양차량지원"]
-      };
-    }
-
-    /* ===============================
-       ✅ UI 이벤트 함수 (탭, 연도 등)
-    ================================ */
-    function changeYear() {
-      currentYear = document.getElementById("yearSelect").value;
-      loadData();
-    }
-
+    function showLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
+    
     function toggleAdmin() {
-      if (isAdmin) {
-        isAdmin = false;
-        document.getElementById('adminBtn').innerText = '관리자 로그인';
-        alert('관리자 모드가 종료되었습니다.');
-      } else {
-        const pass = prompt('관리자 비밀번호를 입력하세요:');
-        if (pass === ADMIN_PASS) {
-          isAdmin = true;
-          document.getElementById('adminBtn').innerText = '관리자 로그아웃';
-          alert('관리자 모드가 활성화되었습니다.');
-        } else if (pass !== null) {
-          alert('비밀번호가 올바르지 않습니다.');
-        }
-      }
-      updateDashboard();
+      if(isAdmin) { isAdmin=false; document.getElementById('adminBtn').innerText='관리자 모드'; alert('종료됨'); }
+      else { if(prompt('비밀번호:')==='admin1234'){ isAdmin=true; document.getElementById('adminBtn').innerText='관리자 로그아웃'; alert('활성화됨'); } }
+      updateUI();
     }
 
     function setMode(mode) {
       currentMode = mode;
       document.getElementById('tab-group').classList.toggle('active', mode === 'group');
       document.getElementById('tab-section').classList.toggle('active', mode === 'section');
-      document.getElementById('section-buttons').style.display = mode === 'group' ? 'none' : 'flex';
+      document.getElementById('tab-personnel').classList.toggle('active', mode === 'personnel');
+      
+      document.getElementById('section-buttons').style.display = mode === 'section' ? 'flex' : 'none';
+      
+      document.getElementById('view-profit').classList.toggle('active', mode !== 'personnel');
+      document.getElementById('view-personnel').classList.toggle('active', mode === 'personnel');
+      
       document.getElementById('group-charts').style.display = mode === 'group' ? 'block' : 'none';
-      document.getElementById('section-charts').style.display = mode === 'group' ? 'none' : 'block';
-      updateDashboard();
+      document.getElementById('section-charts').style.display = mode === 'section' ? 'block' : 'none';
+
+      document.getElementById('yearSelect').style.visibility = mode === 'personnel' ? 'hidden' : 'visible';
+
+      updateUI();
     }
 
     function setSection(sec) {
       currentSection = sec;
-      document.querySelectorAll('.sec-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.sec-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(`btn-${sec}`).classList.add('active');
-      updateDashboard();
+      updateUI();
     }
 
-    function toggleDetail(index) {
-      const detailRow = document.getElementById(`detail-${index}`);
-      const icon = document.getElementById(`icon-${index}`);
-      if (!detailRow) return;
-      if (detailRow.style.display === 'table-row') {
-        detailRow.style.display = 'none';
-        if (icon) icon.innerText = '🔽';
-      } else {
-        detailRow.style.display = 'table-row';
-        if (icon) icon.innerText = '🔼';
-      }
+    // 데이터 로드
+    async function loadData() {
+      showLoading(true);
+      const year = document.getElementById("yearSelect").value;
+      try {
+        const res = await fetch(API_URL);
+        const json = await res.json();
+        
+        buildProfitData(json.profit || [], year);
+        buildHRData(json.personnel || []);
+        
+        updateUI();
+      } catch (e) { alert("데이터 로드 실패"); }
+      showLoading(false);
     }
 
-    /* ===============================
-       ✅ 데이터 포맷 및 테이블 렌더링
-    ================================ */
-    function formatNumber(num) {
-      if (num === null || num === undefined) return "-";
-      return num === 0 ? "0" : num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    // 매출 데이터 조립
+    function buildProfitData(pData, year) {
+      const empty12 = () => Array.from({length:12}, (_,i)=>({ m:`${i+1}월`, s:0, cL:0, cE:0, sgL:0, sgE:0 }));
+      profitBase = { "광양사무지원":empty12(), "광양총무지원":empty12(), "광양차량지원":empty12() };
+
+      pData.forEach(r => {
+        let ym = String(r["년월"]||"").trim(); let sec = String(r["섹션"]||"").trim();
+        if(ym.startsWith(year) && profitBase[sec]) {
+          let idx = Number(ym.slice(5,7))-1;
+          if(idx>=0 && idx<=11) {
+            let t = profitBase[sec][idx];
+            t.s+=Number(r["매출액"]||0); t.cL+=Number(r["원가-노무비"]||0); t.cE+=Number(r["원가-경비"]||0); 
+            t.sgL+=Number(r["판관-급여"]||0); t.sgE+=Number(r["판관-경비"]||0);
+          }
+        }
+      });
+      
+      const calcP = arr => arr.map(a => ({ m:a.m, s:a.s, c:a.cL+a.cE, sg:a.sgL+a.sgE, op:a.s-(a.cL+a.cE)-(a.sgL+a.sgE), cL:a.cL, cE:a.cE, sgL:a.sgL, sgE:a.sgE }));
+      
+      const pGrp = profitBase["광양사무지원"].map((_, i) => {
+        const a=profitBase["광양사무지원"][i], b=profitBase["광양총무지원"][i], c=profitBase["광양차량지원"][i];
+        return { m:a.m, s:a.s+b.s+c.s, c:a.cL+a.cE+b.cL+b.cE+c.cL+c.cE, sg:a.sgL+a.sgE+b.sgL+b.sgE+c.sgL+c.sgE, 
+                 op:(a.s+b.s+c.s)-(a.cL+a.cE+b.cL+b.cE+c.cL+c.cE)-(a.sgL+a.sgE+b.sgL+b.sgE+c.sgL+c.sgE) };
+      });
+      
+      profitApp = { "그룹전체": pGrp, "광양사무지원": calcP(profitBase["광양사무지원"]), "광양총무지원": calcP(profitBase["광양총무지원"]), "광양차량지원": calcP(profitBase["광양차량지원"]) };
     }
 
-    function getProfitClass(val) {
-      return val > 0 ? "profit positive" : val < 0 ? "profit negative" : "profit";
+    // 인사 데이터 조립
+    function buildHRData(hrArray) {
+      hrData = { "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} };
+      hrArray.forEach(r => {
+        let sec = String(r["섹션"]||"").trim();
+        if(hrData[sec]) {
+          hrData[sec].mT = Number(r["남성총원"]||0);
+          hrData[sec].fT = Number(r["여성총원"]||0);
+          hrData[sec].mS = Number(r["남성중증"]||0);
+          hrData[sec].mM = Number(r["남성경증"]||0);
+          hrData[sec].fS = Number(r["여성중증"]||0);
+          hrData[sec].fM = Number(r["여성경증"]||0);
+        }
+      });
     }
 
-    function getInsightComment(curr, prev) {
-      if (!curr || curr.sales <= 0) return '데이터가 입력되지 않았습니다.';
-      const opMargin = ((curr.op / curr.sales) * 100).toFixed(1);
-      const laborTotal = curr.cogs_labor + curr.sga_labor;
-      const laborRatio = curr.sales > 0 ? ((laborTotal / curr.sales) * 100).toFixed(1) : 0;
-
-      let text = `영업이익률 <b>${opMargin}%</b> 기록. `;
-      if (prev && prev.sales > 0) {
-        if (curr.op > prev.op) text += `전월비 <b class="good">수익성 개선</b>. `;
-        else if (curr.op < prev.op) text += `전월비 <b class="bad">수익성 하락</b>. `;
-        else text += `전월과 유사한 실적. `;
-      }
-      if (laborRatio >= 50) text += `(노무비 비중 <b class="bad">${laborRatio}%</b> 주의)`;
-      else text += `(노무비 비중 <b>${laborRatio}%</b> 적정 유지)`;
-
-      return text;
+    function updateUI() {
+      if(currentMode === 'personnel') renderHR();
+      else renderProfit();
     }
 
-    function updateDashboard() {
-      processData();
-      const targetKey = currentMode === 'group' ? '그룹전체' : currentSection;
-      const data = appData[targetKey];
+    const fmt = n => n===0 ? "0" : n.toLocaleString();
 
-      // 1. 테이블 제목 업데이트
-      document.getElementById("tableTitle").innerText = `[${currentYear}] ${titleMap[targetKey]} 손익표`;
-      if (currentMode === 'section') {
-        document.getElementById("sectionSalesChartTitle").innerText = `📊 ${titleMap[targetKey]} 매출액 추이`;
-        document.getElementById("sectionOpChartTitle").innerText = `📈 ${titleMap[targetKey]} 영업이익 추이`;
-      }
-
-      // 2. 테이블 데이터 채우기
-      const tbody = document.getElementById("tableBody");
+    // 💰 매출 테이블 및 차트 렌더링
+    function renderProfit() {
+      const key = currentMode === 'group' ? '그룹전체' : currentSection;
+      document.getElementById("tableTitleProfit").innerText = currentMode === 'group' ? '🏢 그룹 손익표' : `📊 ${key} 손익표`;
+      
+      const data = profitApp[key];
+      const tbody = document.getElementById("tableBodyProfit");
       tbody.innerHTML = "";
-
-      let tSales = 0, tCogs = 0, tGp = 0, tSga = 0, tOp = 0;
-
-      data.forEach((row, idx) => {
-        tSales += row.sales; tCogs += row.cogs; tGp += row.gp; tSga += row.sga; tOp += row.op;
-
-        const tr = document.createElement("tr");
-        tr.className = "main-row";
-        tr.onclick = () => toggleDetail(idx);
-        tr.innerHTML = `
-          <td class="month-cell">${row.month} <span id="icon-${idx}" style="font-size:10px;">🔽</span></td>
-          <td>${formatNumber(row.sales)}</td>
-          <td>${formatNumber(row.cogs)}</td>
-          <td>${formatNumber(row.gp)}</td>
-          <td>${formatNumber(row.sga)}</td>
-          <td class="${getProfitClass(row.op)}">${formatNumber(row.op)}</td>
-        `;
+      
+      let tS=0, tC=0, tSg=0, tOp=0;
+      data.forEach((r, i) => {
+        tS+=r.s; tC+=r.c; tSg+=r.sg; tOp+=r.op;
+        const tr = document.createElement("tr"); tr.className="main-row";
+        tr.onclick = () => { let el = document.getElementById(`p-det-${i}`); el.style.display = el.style.display==='table-row' ? 'none':'table-row'; };
+        tr.innerHTML = `<td class="month-cell">${r.m} 🔽</td><td>${fmt(r.s)}</td><td>${fmt(r.c)}</td><td>${fmt(r.sg)}</td><td class="${r.op>=0?'positive':'negative'} profit">${fmt(r.op)}</td>`;
         tbody.appendChild(tr);
 
-        const aiComment = getInsightComment(row, idx > 0 ? data[idx - 1] : null);
-        const detailTr = document.createElement("tr");
-        detailTr.id = `detail-${idx}`;
-        detailTr.className = "detail-row";
-
-        if (currentMode === 'section' && isAdmin) {
-          detailTr.innerHTML = `
-            <td colspan="6" style="padding:0; border:none;">
-              <div class="edit-box">
-                <div class="edit-row"><label>매출액</label><input type="number" value="${row.sales}" /></div>
-                <div class="edit-row"><label>원가-노무비</label><input type="number" value="${row.cogs_labor}" /></div>
-                <div class="edit-row"><label>원가-경비</label><input type="number" value="${row.cogs_exp}" /></div>
-                <div class="edit-row"><label>판관-급여</label><input type="number" value="${row.sga_labor}" /></div>
-                <div class="edit-row"><label>판관-경비</label><input type="number" value="${row.sga_exp}" /></div>
-                <div class="edit-actions"><button class="save-btn" onclick="saveToSheet(this, ${idx})">구글 시트에 저장</button></div>
-              </div>
-            </td>`;
+        const dTr = document.createElement("tr"); dTr.id=`p-det-${i}`; dTr.className="detail-row";
+        if(currentMode==='section' && isAdmin) {
+          dTr.innerHTML = `<td colspan="5"><div class="edit-box">
+            <div class="edit-row"><label>매출</label><input id="s-${i}" value="${r.s}"></div>
+            <div class="edit-row"><label>노무비</label><input id="cl-${i}" value="${r.cL}"></div>
+            <div class="edit-row"><label>경비</label><input id="ce-${i}" value="${r.cE}"></div>
+            <div class="edit-row"><label>판관-급여</label><input id="sgl-${i}" value="${r.sgL}"></div>
+            <div class="edit-row"><label>판관-경비</label><input id="sge-${i}" value="${r.sgE}"></div>
+            <button class="save-btn" onclick="saveProfit(${i})">손익 저장하기</button></div></td>`;
         } else {
-          detailTr.innerHTML = `
-            <td colspan="6" style="padding:0; border:none;">
-              <div class="detail-box">
-                <div class="d-row"><span class="d-title">🛒 매출원가 (${formatNumber(row.cogs)})</span>
-                <span class="d-value">노무비 <b>${formatNumber(row.cogs_labor)}</b> / 경비 <b>${formatNumber(row.cogs_exp)}</b></span></div>
-                <div class="d-row"><span class="d-title">🏢 판관비 (${formatNumber(row.sga)})</span>
-                <span class="d-value">급여 <b>${formatNumber(row.sga_labor)}</b> / 경비 <b>${formatNumber(row.sga_exp)}</b></span></div>
-                <div class="insight-box">${aiComment}</div>
-              </div>
-            </td>`;
+          dTr.innerHTML = `<td colspan="5"><div class="edit-box" style="padding:10px;text-align:center;">매출총이익: <b>${fmt(r.s - r.c)}</b></div></td>`;
         }
-        tbody.appendChild(detailTr);
+        tbody.appendChild(dTr);
       });
+      tbody.insertAdjacentHTML('beforeend', `<tr class="total-row"><td>합계</td><td>${fmt(tS)}</td><td>${fmt(tC)}</td><td>${fmt(tSg)}</td><td class="${tOp>=0?'positive':'negative'} profit">${fmt(tOp)}</td></tr>`);
 
-      const totalTr = document.createElement("tr");
-      totalTr.className = "total-row";
-      totalTr.innerHTML = `
-        <td>합계</td>
-        <td>${formatNumber(tSales)}</td>
-        <td>${formatNumber(tCogs)}</td>
-        <td>${formatNumber(tGp)}</td>
-        <td>${formatNumber(tSga)}</td>
-        <td class="${getProfitClass(tOp)}">${formatNumber(tOp)}</td>
-      `;
-      tbody.appendChild(totalTr);
-
-      // 3. 차트 그리기
-      if (currentMode === 'group') {
-        drawBarChart("salesChartArea", data, "sales", "var(--color-sales-bar)");
-        drawBarChart("opChartArea", data, "op", "var(--positive)");
+      // 차트 그리기
+      if(currentMode === 'group') {
+        drawBarChart("grpSalesChart", data, "s", "var(--color-sales-bar)");
+        drawBarChart("grpOpChart", data, "op", "var(--positive)");
         drawSalesPie();
-        drawOpSummaryCards(); // ✅ 대시보드 요약 카드 그리기
+        drawSummaryCards();
       } else {
-        drawBarChart("sectionSalesChartArea", data, "sales", "var(--color-sales-bar)");
-        drawBarChart("sectionOpChartArea", data, "op", "var(--positive)");
+        document.getElementById("secSalesTitle").innerText = `📊 ${key} 매출액 추이`;
+        document.getElementById("secOpTitle").innerText = `📈 ${key} 영업이익 추이`;
+        drawBarChart("secSalesChart", data, "s", "var(--color-sales-bar)");
+        drawBarChart("secOpChart", data, "op", "var(--positive)");
       }
     }
 
-    /* ===============================
-       ✅ 저장 기능 (API POST)
-    ================================ */
-    async function saveToSheet(btn, idx) {
-      const inputs = btn.closest('.edit-box').querySelectorAll('input');
-      const payload = {
-        yearMonth: `${currentYear}-${String(idx + 1).padStart(2, "0")}`,
-        section: currentSection,
-        sales: Number(inputs[0].value || 0),
-        cogsLabor: Number(inputs[1].value || 0),
-        cogsExp: Number(inputs[2].value || 0),
-        sgaLabor: Number(inputs[3].value || 0),
-        sgaExp: Number(inputs[4].value || 0)
-      };
-
-      showLoading(true, "구글 시트에 저장하는 중입니다...");
-      try {
-        await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-        alert("구글 시트에 성공적으로 저장되었습니다.");
-        await loadData();
-        document.getElementById(`detail-${idx}`).style.display = 'table-row';
-        const icon = document.getElementById(`icon-${idx}`);
-        if (icon) icon.innerText = '🔼';
-      } catch (error) {
-        alert("저장 중 오류가 발생했습니다.");
-      } finally {
-        showLoading(false);
-      }
-    }
-
-    /* ===============================
-       ✅ 차트 그리기 함수 (추이 차트)
-    ================================ */
-    function drawBarChart(containerId, data, key, positiveColor) {
-      const chartArea = document.getElementById(containerId);
-      chartArea.innerHTML = "";
-      
-      const isOp = (key === "op");
+    // 📊 차트 컴포넌트 복구
+    function drawBarChart(containerId, data, key, color) {
+      const area = document.getElementById(containerId); area.innerHTML = "";
+      const isOp = key==="op";
       
       const line = document.createElement("div");
-      line.style.position = "absolute"; line.style.left = "0"; line.style.right = "0"; line.style.height = "1px"; line.style.zIndex = "0";
-      if (isOp) { 
-        line.style.borderTop = "1px solid #999"; line.style.top = "calc(50% - 11px)"; 
-      } else { 
-        line.style.borderTop = "1px dashed #cbd5e1"; line.style.bottom = "22px"; 
-      }
-      chartArea.appendChild(line);
+      line.style.position="absolute"; line.style.left="0"; line.style.right="0"; line.style.height="1px"; line.style.zIndex="0";
+      if(isOp) { line.style.borderTop="1px solid #999"; line.style.top="calc(50% - 11px)"; } 
+      else { line.style.borderTop="1px dashed #cbd5e1"; line.style.bottom="22px"; }
+      area.appendChild(line);
 
-      const maxVal = Math.max(...data.map(d => Math.abs(d[key])), 1);
+      const maxVal = Math.max(...data.map(d=>Math.abs(d[key])), 1);
 
-      data.forEach(row => {
-        const val = row[key];
-        const isPositive = val >= 0;
-        const isEmpty = row.sales === 0 && row.cogs === 0 && row.sga === 0 && row.op === 0;
+      data.forEach(r => {
+        const v = r[key]; const isP = v>=0; const isE = r.s===0 && r.op===0;
+        const col = document.createElement("div"); col.className="bar-col";
+        const w = document.createElement("div"); w.className="bar-wrapper";
+        const bar = document.createElement("div"); bar.className = isE?"bar bar-empty":"bar";
+        bar.style.background = isE ? "#cbd5e1" : (isP ? color : "var(--negative)");
 
-        const col = document.createElement("div"); col.className = "bar-col";
-        const barWrapper = document.createElement("div"); barWrapper.className = "bar-wrapper";
-        
-        let heightPercent = isEmpty ? 0 : (Math.abs(val) / maxVal) * 95;
-
-        const bar = document.createElement("div");
-        bar.className = isEmpty ? "bar bar-empty" : "bar";
-        bar.style.background = isEmpty ? "#cbd5e1" : (isPositive ? positiveColor : "var(--negative)");
-
-        if (isOp) {
-          bar.style.height = isEmpty ? "2px" : `${heightPercent / 2}%`;
-          if (isPositive) { 
-            bar.style.bottom = "50%"; bar.style.borderRadius = "4px 4px 0 0"; bar.style.alignItems = "flex-start"; bar.style.paddingTop = "4px"; 
-          } else { 
-            bar.style.top = "50%"; bar.style.borderRadius = "0 0 4px 4px"; bar.style.alignItems = "flex-end"; bar.style.paddingBottom = "4px"; 
-          }
+        let hp = isE ? 0 : (Math.abs(v)/maxVal)*95;
+        if(isOp){
+          bar.style.height = isE?"2px":`${hp/2}%`;
+          if(isP){ bar.style.bottom="50%"; bar.style.borderRadius="4px 4px 0 0"; bar.style.alignItems="flex-start"; bar.style.paddingTop="4px";}
+          else { bar.style.top="50%"; bar.style.borderRadius="0 0 4px 4px"; bar.style.alignItems="flex-end"; bar.style.paddingBottom="4px";}
         } else {
-          bar.style.height = isEmpty ? "2px" : `${heightPercent}%`;
-          bar.style.bottom = "0"; bar.style.borderRadius = "4px 4px 0 0"; bar.style.alignItems = "flex-start"; bar.style.paddingTop = "4px";
+          bar.style.height = isE?"2px":`${hp}%`; bar.style.bottom="0"; bar.style.borderRadius="4px 4px 0 0"; bar.style.alignItems="flex-start"; bar.style.paddingTop="4px";
         }
-        bar.innerHTML = isEmpty ? '' : formatNumber(val);
-        barWrapper.appendChild(bar);
-
-        const labelArea = document.createElement("div"); labelArea.className = "bar-label"; labelArea.innerText = row.month;
-        col.appendChild(barWrapper); col.appendChild(labelArea); chartArea.appendChild(col);
+        bar.innerHTML = isE ? '' : fmt(v); w.appendChild(bar);
+        col.appendChild(w); col.innerHTML+=`<div class="bar-label">${r.m}</div>`; area.appendChild(col);
       });
     }
 
-    /* ===============================
-       ✅ 매출액 비중 파이 차트 (유지)
-    ================================ */
     function drawSalesPie() {
-      const getSum = sec => appData[sec].reduce((s, d) => s + d.sales, 0);
-      const items = [
-        { name: "광양사무지원", value: getSum("광양사무지원"), color: "var(--color-samu)" },
-        { name: "광양총무지원", value: getSum("광양총무지원"), color: "var(--color-chongmu)" },
-        { name: "광양차량지원", value: getSum("광양차량지원"), color: "var(--color-car)" }
-      ];
-
-      const total = items.reduce((s, i) => s + i.value, 0);
-      const chartEl = document.getElementById("pieChartSales");
-      const legendEl = document.getElementById("pieLegendSales");
-
-      if (total > 0) {
-        let acc = 0;
-        chartEl.style.background = `conic-gradient(${items.map(i => {
-          const s = acc; acc += (i.value / total) * 100;
-          return `${i.color} ${s}% ${acc}%`;
-        }).join(",")})`;
-
-        legendEl.innerHTML = items.map(item => `
-          <div class="legend-item">
-            <div class="legend-label"><span class="dot" style="background:${item.color}"></span>${item.name}</div>
-            <div class="legend-value">${((item.value / total) * 100).toFixed(1)}%<br><span>${formatNumber(item.value)}</span></div>
-          </div>
-        `).join("");
-      } else {
-        chartEl.style.background = "#e2e8f0";
-        legendEl.innerHTML = `<div class="muted">데이터 없음</div>`;
-      }
+      const getS = k => profitApp[k].reduce((s,d)=>s+d.s,0);
+      const items = [{n:"사무",v:getS("광양사무지원"),c:"var(--color-samu)"}, {n:"총무",v:getS("광양총무지원"),c:"var(--color-chongmu)"}, {n:"차량",v:getS("광양차량지원"),c:"var(--color-car)"}];
+      const tot = items.reduce((s,i)=>s+i.v,0);
+      const cEl = document.getElementById("pieChartSales"); const lEl = document.getElementById("pieLegendSales");
+      if(tot>0) {
+        let acc=0; cEl.style.background = `conic-gradient(${items.map(i=>{ let s=acc; acc+=(i.v/tot)*100; return `${i.c} ${s}% ${acc}%`;}).join(",")})`;
+        lEl.innerHTML = items.map(i=>`<div class="legend-item"><div style="font-weight:600;"><span class="dot" style="background:${i.c}"></span>${i.n}</div><b>${((i.v/tot)*100).toFixed(1)}%</b></div>`).join("");
+      } else { cEl.style.background="#e2e8f0"; lEl.innerHTML="데이터 없음"; }
     }
 
-    /* ===============================
-       ✅ NEW: 대시보드 요약 카드 (그룹 + 섹션별 누적 이익)
-    ================================ */
-    function drawOpSummaryCards() {
-      const area = document.getElementById("opSummaryArea");
-      area.innerHTML = "";
-
-      const getSum = sec => appData[sec].reduce((s, d) => s + d.op, 0);
-      
-      // 4개의 카드 데이터 구성
-      const cardsData = [
-        { title: "🏢 그룹 전체 누적", val: getSum("그룹전체"), isGroup: true },
-        { title: "📋 사무지원", val: getSum("광양사무지원"), isGroup: false },
-        { title: "💼 총무지원", val: getSum("광양총무지원"), isGroup: false },
-        { title: "🚗 차량지원", val: getSum("광양차량지원"), isGroup: false }
+    function drawSummaryCards() {
+      const a = document.getElementById("opSummaryArea"); a.innerHTML="";
+      const cData = [
+        {t:"🏢 그룹전체", v:profitApp["그룹전체"].reduce((a,b)=>a+b.op,0), g:true},
+        {t:"📋 사무지원", v:profitApp["광양사무지원"].reduce((a,b)=>a+b.op,0)},
+        {t:"💼 총무지원", v:profitApp["광양총무지원"].reduce((a,b)=>a+b.op,0)},
+        {t:"🚗 차량지원", v:profitApp["광양차량지원"].reduce((a,b)=>a+b.op,0)}
       ];
-
-      cardsData.forEach(item => {
-        const isPos = item.val > 0;
-        const isNeg = item.val < 0;
-        
-        // 부호 추가 (+, -)
-        let displayVal = formatNumber(Math.abs(item.val));
-        if (isPos) displayVal = "+" + displayVal;
-        else if (isNeg) displayVal = "-" + displayVal;
-
-        // 색상 및 뱃지 텍스트
-        const valClass = isPos ? "pos" : isNeg ? "neg" : "";
-        const badgeClass = isPos ? "badge-pos" : isNeg ? "badge-neg" : "";
-        const badgeText = isPos ? "🔵 흑자 유지" : isNeg ? "🔴 적자 발생" : "⚫ 실적 없음";
-
-        const card = document.createElement("div");
-        card.className = `summary-card ${item.isGroup ? "group-card" : ""}`;
-        
-        card.innerHTML = `
-          <div class="summary-title">${item.title}</div>
-          <div class="summary-value ${valClass}">${displayVal}</div>
-          <div class="summary-badge ${badgeClass}">${badgeText}</div>
-        `;
-        area.appendChild(card);
+      cData.forEach(c => {
+        let pos = c.v>0; let bCls=pos?"badge-pos":"badge-neg"; let tCls=pos?"positive":"negative";
+        a.innerHTML += `<div class="summary-card ${c.g?'group-card':''}"><div class="summary-title">${c.t}</div><div class="summary-value ${tCls}">${pos?'+':''}${fmt(c.v)}</div><div class="summary-badge ${bCls}">${pos?'🔵흑자':'🔴적자'}</div></div>`;
       });
     }
 
-    /* ===============================
-       ✅ 초기 실행
-    ================================ */
-    window.onload = () => {
-      loadData();
-    };
+    // 👥 인원 렌더링 (산정 공식 적용)
+    function renderHR() {
+      const container = document.getElementById("hrCardsContainer");
+      container.innerHTML = "";
+
+      // 헬퍼: 산정 인원 계산 공식 (남성중증*2 + 남성경증*0.5 + 여성중증*2 + 여성경증*1)
+      const calcRec = (mS, mM, fS, fM) => (mS*2) + (mM*0.5) + (fS*2) + (fM*1);
+      const calcRatio = (rec, tot) => tot > 0 ? ((rec/tot)*100).toFixed(1) + '%' : '0.0%';
+
+      // 그룹 합산
+      let g = {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0};
+      Object.values(hrData).forEach(sec => {
+        g.mT+=sec.mT; g.fT+=sec.fT; g.mS+=sec.mS; g.mM+=sec.mM; g.fS+=sec.fS; g.fM+=sec.fM;
+      });
+
+      const makeCard = (title, secKey, d, isGroup) => {
+        let tot = d.mT + d.fT;
+        let rec = calcRec(d.mS, d.mM, d.fS, d.fM);
+        
+        let adminHtml = '';
+        if(isAdmin && !isGroup) {
+          adminHtml = `
+            <div class="hr-grid">
+              <div class="hr-input-group"><label>남성 총원</label><input id="mT_${secKey}" value="${d.mT}"></div>
+              <div class="hr-input-group"><label>여성 총원</label><input id="fT_${secKey}" value="${d.fT}"></div>
+              <div class="hr-input-group"><label>남성 중증</label><input id="mS_${secKey}" value="${d.mS}"></div>
+              <div class="hr-input-group"><label>여성 중증</label><input id="fS_${secKey}" value="${d.fS}"></div>
+              <div class="hr-input-group"><label>남성 경증</label><input id="mM_${secKey}" value="${d.mM}"></div>
+              <div class="hr-input-group"><label>여성 경증</label><input id="fM_${secKey}" value="${d.fM}"></div>
+            </div>
+            <button class="save-btn" style="margin-top:10px;" onclick="saveHR('${secKey}')">인원 정보 저장</button>
+          `;
+        }
+        return `
+          <div class="hr-card ${isGroup ? 'hr-group' : ''}">
+            <div class="hr-title">${title}</div>
+            <div class="hr-row"><span class="hr-label">총 근무 인원</span>
+              <span class="hr-val">${tot}명 <span class="hr-sub">(남 ${d.mT} / 여 ${d.fT})</span></span>
+            </div>
+            <div class="hr-row" style="margin-bottom:4px;"><span class="hr-label">장애인 산정 인원</span>
+              <div><span class="hr-val">${rec}명</span><span class="hr-badge">고용률 ${calcRatio(rec, tot)}</span></div>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; text-align:right;">
+              실제: 중증(남${d.mS},여${d.fS}) / 경증(남${d.mM},여${d.fM})
+            </div>
+            ${adminHtml}
+          </div>
+        `;
+      };
+
+      container.innerHTML += makeCard("🏢 그룹전체 합계", "", g, true);
+      container.innerHTML += makeCard("📋 사무지원", "광양사무지원", hrData["광양사무지원"], false);
+      container.innerHTML += makeCard("💼 총무지원", "광양총무지원", hrData["광양총무지원"], false);
+      container.innerHTML += makeCard("🚗 차량지원", "광양차량지원", hrData["광양차량지원"], false);
+    }
+
+    // 💾 저장 (매출)
+    async function saveProfit(i) {
+      let ym = `${document.getElementById("yearSelect").value}-${String(i+1).padStart(2,'0')}`;
+      let p = {
+        type: 'profit', yearMonth: ym, section: currentSection,
+        sales: +document.getElementById(`s-${i}`).value,
+        cogsLabor: +document.getElementById(`cl-${i}`).value,
+        cogsExp: +document.getElementById(`ce-${i}`).value,
+        sgaLabor: +document.getElementById(`sgl-${i}`).value,
+        sgaExp: +document.getElementById(`sge-${i}`).value
+      };
+      await postData(p);
+    }
+
+    // 💾 저장 (인원)
+    async function saveHR(secKey) {
+      let p = {
+        type: 'personnel', section: secKey,
+        mT: +document.getElementById(`mT_${secKey}`).value,
+        fT: +document.getElementById(`fT_${secKey}`).value,
+        mS: +document.getElementById(`mS_${secKey}`).value,
+        mM: +document.getElementById(`mM_${secKey}`).value,
+        fS: +document.getElementById(`fS_${secKey}`).value,
+        fM: +document.getElementById(`fM_${secKey}`).value
+      };
+      await postData(p);
+    }
+
+    async function postData(payload) {
+      showLoading(true);
+      try {
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        alert("성공적으로 저장되었습니다.");
+        await loadData();
+      } catch(e) { alert("저장에 실패했습니다."); }
+      showLoading(false);
+    }
+
+    window.onload = loadData;
   </script>
 </body>
 </html>
