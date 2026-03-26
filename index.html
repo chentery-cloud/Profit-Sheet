@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>P-Humans</title>
+  <title>광양사무지원그룹 대시보드</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -17,6 +17,7 @@
       --border: #dbe0e4;
       --color-sales-bar: #2563EB;
       --positive: #059669;
+      --warning: #d97706;
       --negative: #DC2626;
       --color-samu: #1E3A8A;
       --color-chongmu: #3B82F6;
@@ -62,6 +63,7 @@
     th { color: var(--sub); border-bottom: 2px solid var(--primary-light); font-weight: 700; }
     .profit { font-weight: 700; }
     .positive { color: var(--positive); }
+    .warning { color: var(--warning); }
     .negative { color: var(--negative); }
     .main-row { cursor: pointer; transition: background 0.2s; }
     .main-row:hover { background: #f8fafc; }
@@ -94,7 +96,7 @@
     .badge-pos { background: #e0f2fe; color: var(--primary-light); }
     .badge-neg { background: #fee2e2; color: var(--negative); }
 
-    /* 편집 박스 & 자동분석 박스 */
+    /* 편집 박스 & AI 분석 박스 */
     .edit-box { display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 8px; }
     .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .edit-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -102,7 +104,6 @@
     .edit-row input { width: 100%; max-width: 100px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: right; font-size: 13px; }
     .save-btn { width: 100%; padding: 10px; font-size: 13px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; background: var(--primary); color: white; margin-top: 8px; }
 
-    /* AI 분석 디자인 */
     .ai-box { margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; overflow: hidden; }
     .ai-title { background: #f1f5f9; padding: 10px 12px; font-size: 13px; font-weight: 800; color: #334155; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
     .ai-content { padding: 12px; font-size: 13px; color: var(--text); line-height: 1.6; background: #ffffff; }
@@ -134,15 +135,12 @@
 </head>
 <body>
   
-  <div id="loadingOverlay"><div class="spinner"></div><div>데이터 불러오는 중입니다...</div></div>
+  <div id="loadingOverlay"><div class="spinner"></div><div>데이터를 불러오는 중입니다...</div></div>
 
   <header>
     <div style="display:flex; align-items:center;">
-      <div class="header-title">🏢 광양서비스지원그룹</div>
-      <select id="yearSelect" class="year-select" onchange="loadData()">
-        <option value="2026" selected>2026년</option>
-      </select>
-    </div>
+      <div class="header-title">🏢 2026년 광양서비스지원그룹</div>
+      </div>
     <button class="admin-btn" onclick="toggleAdmin()" id="adminBtn">관리자 모드</button>
   </header>
 
@@ -169,7 +167,13 @@
         </table>
       </div>
 
-      <!-- 차트 영역 -->
+      <!-- 💡 추가된 KPI 실적 카드 영역 -->
+      <div id="kpi-section" class="card" style="display:none;">
+        <div class="card-header"><h3>🎯 그룹 KPI 목표 대비 실적</h3></div>
+        <div id="kpi-content"></div>
+        <div id="kpi-admin" style="display:none; margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);"></div>
+      </div>
+
       <div id="group-charts" class="card">
         <div class="card-header"><h3>📊 그룹 매출액 추이</h3></div>
         <div style="margin-bottom:24px;"><div class="chart-container" id="grpSalesChart"></div></div>
@@ -202,19 +206,18 @@
   </div>
 
   <script>
-    // ⚠️ 구글 Apps Script 주소 (그대로 유지)
-    const API_URL = "https://script.google.com/macros/s/AKfycbw-mBSMIl9BWk_uZigPpdckeWH-SFdaF9W8AqkdZJUNgdZ2f87D7-E_uUM0vKimoPKl0g/exec";
+    // ⚠️ 구글 Apps Script 주소 (새로 발급받은 주소로 교체해주세요!)
+    const API_URL = "https://script.google.com/macros/s/AKfycbwdsaphMHPGr67xW0q9zOV8NswgMS09ujlbsJ_XdscdpvlPFB6GUj_m19oK5T_-Tmmgwg/exec";
     
     let isAdmin = false;
     let currentMode = 'group'; 
     let currentSection = '광양사무지원';
 
     let profitBase = {}, profitApp = {};
-    let hrData = { 
-      "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, 
-      "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, 
-      "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} 
-    };
+    let hrData = { "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} };
+    
+    // 💡 KPI 타겟 데이터 변수
+    let kpiTarget = { "매출액": 111.8, "매출총이익률": 5, "장애인산정인원": 15 };
 
     function showLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
     
@@ -256,15 +259,29 @@
       try {
         const res = await fetch(API_URL);
         const json = await res.json();
+        
         buildProfitData(json.profit || [], year);
         buildHRData(json.personnel || []);
+        buildKPIData(json.kpi || []); // KPI 로드 추가
+        
         updateUI();
       } catch (e) { alert("데이터 로드 실패"); }
       showLoading(false);
     }
 
+    // 💡 KPI 데이터 조립
+    function buildKPIData(kpiArr) {
+      if (kpiArr && kpiArr.length > 0) {
+        kpiArr.forEach(row => {
+          let key = String(row["KPI"] || "").trim();
+          let val = Number(row["목표"] || 0);
+          if (key) kpiTarget[key] = val;
+        });
+      }
+    }
+
     function buildProfitData(pData, year) {
-      const empty12 = () => Array.from({length:12}, (_,i)=>({ m:`${i+1}월`, s:0, cL:0, cE:0, sgL:0, sgE:0 }));
+      const empty12 = () => Array.from({length:12}, (_,i)=>({ m:`${i+1}월`, s:0, cL:0, cE:0, sgL:0, sgE:0, desc:"" }));
       profitBase = { "광양사무지원":empty12(), "광양총무지원":empty12(), "광양차량지원":empty12() };
 
       pData.forEach(r => {
@@ -275,11 +292,12 @@
             let t = profitBase[sec][idx];
             t.s+=Number(r["매출액"]||0); t.cL+=Number(r["원가-노무비"]||0); t.cE+=Number(r["원가-경비"]||0); 
             t.sgL+=Number(r["판관-급여"]||0); t.sgE+=Number(r["판관-경비"]||0);
+            t.desc = String(r["분석내용"]||"").trim();
           }
         }
       });
       
-      const calcP = arr => arr.map(a => ({ m:a.m, s:a.s, c:a.cL+a.cE, sg:a.sgL+a.sgE, op:a.s-(a.cL+a.cE)-(a.sgL+a.sgE), cL:a.cL, cE:a.cE, sgL:a.sgL, sgE:a.sgE }));
+      const calcP = arr => arr.map(a => ({ m:a.m, s:a.s, c:a.cL+a.cE, sg:a.sgL+a.sgE, op:a.s-(a.cL+a.cE)-(a.sgL+a.sgE), cL:a.cL, cE:a.cE, sgL:a.sgL, sgE:a.sgE, desc:a.desc }));
       
       const pGrp = profitBase["광양사무지원"].map((_, i) => {
         const a=profitBase["광양사무지원"][i], b=profitBase["광양총무지원"][i], c=profitBase["광양차량지원"][i];
@@ -305,40 +323,102 @@
 
     function updateUI() {
       if(currentMode === 'personnel') renderHR();
-      else renderProfit();
+      else {
+        renderProfit();
+        renderKPI(); // KPI 렌더링 호출
+      }
     }
 
     const fmt = n => n===0 ? "0" : n.toLocaleString();
+    const formatValue = (v, unit) => unit === "%" ? v.toFixed(1) : (Number.isInteger(v) ? fmt(v) : v.toFixed(1));
 
-    // 🤖 AI 자동 분석 로직 (프론트엔드 자체 생성)
+    // 🎯 KPI 진행률 및 목표 관리자 UI 렌더링
+    function renderKPI() {
+      if(currentMode !== 'group') {
+        document.getElementById('kpi-section').style.display = 'none';
+        return;
+      }
+      document.getElementById('kpi-section').style.display = 'block';
+
+      // 1. 실제 데이터(Actual) 계산
+      let totalSales = 0, totalCogs = 0;
+      profitApp["그룹전체"].forEach(r => { totalSales += r.s; totalCogs += r.c; });
+      let totalGp = totalSales - totalCogs;
+      let actualGpMargin = totalSales > 0 ? (totalGp / totalSales) * 100 : 0;
+
+      let actualRec = 0;
+      Object.values(hrData).forEach(sec => {
+        actualRec += (sec.mS*2) + (sec.mM*0.5) + (sec.fS*2) + (sec.fM*1);
+      });
+
+      let kpiList = [
+        { key: "매출액", name: "총 매출액", unit: "백만원", actual: totalSales, target: kpiTarget["매출액"] },
+        { key: "매출총이익률", name: "매출(직접)총이익률", unit: "%", actual: actualGpMargin, target: kpiTarget["매출총이익률"] },
+        { key: "장애인산정인원", name: "장애인고용 산정인원", unit: "명", actual: actualRec, target: kpiTarget["장애인산정인원"] }
+      ];
+
+      let html = "";
+      let adminHtml = `<h4 style="margin:0 0 10px 0; font-size:13px; color:var(--primary);">⚙️ KPI 목표치 수정</h4><div class="edit-grid">`;
+
+      kpiList.forEach((k, idx) => {
+        let t = k.target || 1; 
+        let rate = (k.actual / t) * 100;
+        let rateStr = rate.toFixed(1);
+
+        let color = "var(--color-sales-bar)";
+        let icon = "🟢"; let textCls = "positive";
+        if (rate >= 100) { color = "var(--positive)"; icon = "🟢"; textCls = "positive"; }
+        else if (rate >= 80) { color = "var(--warning)"; icon = "🟡"; textCls = "warning"; }
+        else { color = "var(--negative)"; icon = "🔴"; textCls = "negative"; }
+
+        html += `
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:6px;">
+              <span>${k.name}</span>
+              <span class="${textCls}">목표 달성률 ${rateStr}% ${icon}</span>
+            </div>
+            <div style="background:#e2e8f0; border-radius:8px; height:12px; overflow:hidden; position:relative;">
+              <div style="background:${color}; width:${Math.min(rate, 100)}%; height:100%; transition:width 0.5s;"></div>
+            </div>
+            <div style="font-size:11px; color:var(--sub); text-align:right; margin-top:4px;">
+              현재 실적: <b>${formatValue(k.actual, k.unit)}${k.unit}</b> / 목표치: <b>${formatValue(k.target, k.unit)}${k.unit}</b>
+            </div>
+          </div>
+        `;
+
+        adminHtml += `
+          <div class="edit-row">
+            <label>${k.key}</label>
+            <input id="kpi-input-${idx}" value="${k.target}">
+          </div>
+        `;
+      });
+
+      adminHtml += `</div><button class="save-btn" onclick="saveKPI()">KPI 목표 저장하기</button>`;
+
+      document.getElementById('kpi-content').innerHTML = html;
+
+      if(isAdmin) {
+        document.getElementById('kpi-admin').style.display = 'block';
+        document.getElementById('kpi-admin').innerHTML = adminHtml;
+      } else {
+        document.getElementById('kpi-admin').style.display = 'none';
+      }
+    }
+
     function getAutoAnalysis(r) {
       if (r.s === 0 && r.c === 0 && r.sg === 0) return "<span style='color:#94a3b8;'>입력된 실적 데이터가 없습니다.</span>";
-
-      let opMargin = r.s > 0 ? ((r.op / r.s) * 100).toFixed(1) : 0;
-      let totalCost = r.c + r.sg;
-      let totalLabor = r.cL + r.sgL;
-      let totalExp = r.cE + r.sgE;
-
+      let totalCost = r.c + r.sg; let totalLabor = r.cL + r.sgL; let totalExp = r.cE + r.sgE;
       let msg = "";
+      if (r.op > 0) msg += `🟢 <b>수익성 양호</b>: 매출 대비 <b>영업이익 ${fmt(r.op)}백만원</b>을 기록하여 안정적인 흑자 구조를 달성했습니다.<br>`;
+      else if (r.op < 0) msg += `🔴 <b>수익성 경고</b>: 매출액보다 총비용이 초과하여 <b>영업손실 ${fmt(Math.abs(r.op))}백만원</b>의 적자가 발생했습니다.<br>`;
+      else msg += `🟡 <b>손익분기</b>: 매출과 지출 비용이 동일한 수준으로 이익이 발생하지 않았습니다.<br>`;
 
-      // 1. 수익성 진단
-      if (r.op > 0) {
-        msg += `🟢 <b>수익성 양호</b>: 매출 대비 <b>영업이익 ${fmt(r.op)}백만원</b>을 기록하여 안정적인 흑자 구조를 달성했습니다.<br>`;
-      } else if (r.op < 0) {
-        msg += `🔴 <b>수익성 경고</b>: 매출액보다 총비용이 초과하여 <b>영업손실 ${fmt(Math.abs(r.op))}백만원</b>의 적자가 발생했습니다. 긴급한 수익 개선이 필요합니다.<br>`;
-      } else {
-        msg += `🟡 <b>손익분기</b>: 매출과 지출 비용이 동일한 수준으로 이익이 발생하지 않았습니다.<br>`;
-      }
-
-      // 2. 비용 구조 분석
       if (totalCost > 0) {
         let laborRatio = ((totalLabor / totalCost) * 100).toFixed(1);
-        msg += `<br>📊 <b>비용 분석</b>: 총비용(${fmt(totalCost)}백만원) 중 <b>인건비(노무비/급여) 비중이 약 ${laborRatio}%</b>(${fmt(totalLabor)}백만원)를 차지합니다. `;
-        if (totalLabor > totalExp) {
-          msg += `서비스업 특성상 인건비 중심의 비용 구조이므로, 인력 운영 효율화가 실적의 핵심 변수가 될 것으로 분석됩니다.`;
-        } else {
-          msg += `일반 경비 지출 비중이 높아, 항목별 경비 절감 검토가 필요해 보입니다.`;
-        }
+        msg += `<br>📊 <b>비용 분석</b>: 총비용(${fmt(totalCost)}백만원) 중 <b>인건비 비중이 약 ${laborRatio}%</b>(${fmt(totalLabor)}백만원)를 차지합니다. `;
+        if (totalLabor > totalExp) msg += `서비스업 특성상 인건비 중심의 비용 구조이므로, 인력 운영 효율화가 실적의 핵심 변수가 될 것으로 분석됩니다.`;
+        else msg += `일반 경비 지출 비중이 높아, 항목별 경비 절감 검토가 필요해 보입니다.`;
       }
       return msg;
     }
@@ -350,7 +430,6 @@
       const data = profitApp[key];
       const tbody = document.getElementById("tableBodyProfit");
       tbody.innerHTML = "";
-      
       let tS=0, tC=0, tGp=0, tSg=0, tOp=0;
 
       data.forEach((r, i) => {
@@ -359,21 +438,12 @@
 
         const tr = document.createElement("tr"); tr.className="main-row";
         tr.onclick = () => { let el = document.getElementById(`p-det-${i}`); el.style.display = el.style.display==='table-row' ? 'none':'table-row'; };
-        
-        tr.innerHTML = `
-          <td class="month-cell">${r.m} 🔽</td>
-          <td>${fmt(r.s)}</td>
-          <td>${fmt(r.c)}</td>
-          <td style="font-weight:600;">${fmt(gp)}</td>
-          <td>${fmt(r.sg)}</td>
-          <td class="${r.op>=0?'positive':'negative'} profit">${fmt(r.op)}</td>
-        `;
+        tr.innerHTML = `<td class="month-cell">${r.m} 🔽</td><td>${fmt(r.s)}</td><td>${fmt(r.c)}</td><td style="font-weight:600;">${fmt(gp)}</td><td>${fmt(r.sg)}</td><td class="${r.op>=0?'positive':'negative'} profit">${fmt(r.op)}</td>`;
         tbody.appendChild(tr);
 
         const dTr = document.createElement("tr"); dTr.id=`p-det-${i}`; dTr.className="detail-row";
-        
         let opMargin = r.s > 0 ? ((r.op / r.s) * 100).toFixed(1) : 0;
-        let aiAnalysisText = getAutoAnalysis(r); // AI 분석 텍스트 호출
+        let aiAnalysisText = getAutoAnalysis(r); 
 
         if(currentMode==='section' && isAdmin) {
           dTr.innerHTML = `<td colspan="6"><div class="edit-box">
@@ -384,41 +454,27 @@
               <div class="edit-row"><label>판관-급여</label><input id="sgl-${i}" value="${r.sgL}"></div>
               <div class="edit-row"><label>판관-경비</label><input id="sge-${i}" value="${r.sgE}"></div>
             </div>
-            
             <div class="ai-box">
-              <div class="ai-title">
-                <span>🤖 AI 자동 분석 리포트</span>
-                <span class="margin-badge">영업이익률: ${opMargin}%</span>
-              </div>
+              <div class="ai-title"><span>🤖 AI 자동 분석 리포트</span><span class="margin-badge">영업이익률: ${opMargin}%</span></div>
               <div class="ai-content">${aiAnalysisText}</div>
             </div>
-
             <button class="save-btn" onclick="saveProfit(${i})">손익 저장하기</button>
           </div></td>`;
         } else {
-          dTr.innerHTML = `<td colspan="6">
-            <div class="edit-box" style="text-align:left;">
+          dTr.innerHTML = `<td colspan="6"><div class="edit-box" style="text-align:left;">
               <div style="font-size:12px; color:var(--sub); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
-                <span>📉 [원가] 노무비: <b>${fmt(r.cL)}</b> / 경비: <b>${fmt(r.cE)}</b></span>
-                <span>📉 [판관] 급여: <b>${fmt(r.sgL)}</b> / 경비: <b>${fmt(r.sgE)}</b></span>
+                <span>📉 [원가] 노무비: <b>${fmt(r.cL)}</b> / 경비: <b>${fmt(r.cE)}</b></span><span>📉 [판관] 급여: <b>${fmt(r.sgL)}</b> / 경비: <b>${fmt(r.sgE)}</b></span>
               </div>
               <div class="ai-box">
-                <div class="ai-title">
-                  <span>🤖 AI 자동 분석 리포트</span>
-                  <span class="margin-badge">영업이익률: ${opMargin}%</span>
-                </div>
+                <div class="ai-title"><span>🤖 AI 자동 분석 리포트</span><span class="margin-badge">영업이익률: ${opMargin}%</span></div>
                 <div class="ai-content">${aiAnalysisText}</div>
               </div>
-            </div>
-          </td>`;
+            </div></td>`;
         }
         tbody.appendChild(dTr);
       });
 
-      tbody.insertAdjacentHTML('beforeend', `<tr class="total-row">
-        <td>합계</td><td>${fmt(tS)}</td><td>${fmt(tC)}</td><td>${fmt(tGp)}</td><td>${fmt(tSg)}</td>
-        <td class="${tOp>=0?'positive':'negative'} profit">${fmt(tOp)}</td>
-      </tr>`);
+      tbody.insertAdjacentHTML('beforeend', `<tr class="total-row"><td>합계</td><td>${fmt(tS)}</td><td>${fmt(tC)}</td><td>${fmt(tGp)}</td><td>${fmt(tSg)}</td><td class="${tOp>=0?'positive':'negative'} profit">${fmt(tOp)}</td></tr>`);
 
       if(currentMode === 'group') {
         drawBarChart("grpSalesChart", data, "s", "var(--color-sales-bar)");
@@ -521,6 +577,24 @@
       container.innerHTML += makeCard("📋 사무지원", "광양사무지원", hrData["광양사무지원"], false);
       container.innerHTML += makeCard("💼 총무지원", "광양총무지원", hrData["광양총무지원"], false);
       container.innerHTML += makeCard("🚗 차량지원", "광양차량지원", hrData["광양차량지원"], false);
+    }
+
+    // 💾 KPI 목표 저장 로직
+    async function saveKPI() {
+      let keys = ["매출액", "매출총이익률", "장애인산정인원"];
+      let payload = { type: 'kpi_multi', kpis: [] };
+      keys.forEach((k, idx) => {
+        let val = Number(document.getElementById(`kpi-input-${idx}`).value);
+        payload.kpis.push({ name: k, target: val });
+      });
+
+      showLoading(true);
+      try {
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        alert("🎯 KPI 목표가 성공적으로 변경 및 저장되었습니다!");
+        await loadData();
+      } catch(e) { alert("저장에 실패했습니다."); }
+      showLoading(false);
     }
 
     async function saveProfit(i) {
