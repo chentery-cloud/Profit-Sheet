@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>P-Humans 통합 대시보드</title>
+  <title>광양서비스지원그룹 대시보드</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -130,14 +130,12 @@
 </head>
 <body>
   
-  <div id="loadingOverlay"><div class="spinner"></div><div>데이터 불러오는 중...</div></div>
+  <div id="loadingOverlay"><div class="spinner"></div><div>데이터를 불러오는 중입니다...</div></div>
 
   <header>
     <div style="display:flex; align-items:center;">
       <div class="header-title">🏢 광양서비스지원그룹</div>
-      <select id="yearSelect" class="year-select" onchange="loadData()">
-        <option value="2026" selected>2026년</option>
-      </select>
+    
     </div>
     <button class="admin-btn" onclick="toggleAdmin()" id="adminBtn">관리자 모드</button>
   </header>
