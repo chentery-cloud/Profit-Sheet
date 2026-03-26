@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>광양사무지원그룹 대시보드</title>
+  <title>P-Humans 통합 대시보드</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -55,7 +55,6 @@
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
     h3 { margin: 0; font-size: 16px; color: var(--primary); }
     
-    /* 손익 테이블 */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 12px 2px; text-align: right; border-bottom: 1px solid #f1f5f9; letter-spacing: -0.5px; }
     th:first-child, td:first-child { text-align: left; padding-left: 4px; }
@@ -71,7 +70,6 @@
     .detail-row { display: none; }
     .total-row td { background: #f1f3f5; font-weight: 700; border-top: 2px solid var(--sub); }
 
-    /* 차트 CSS */
     .chart-container { height: 180px; display: flex; align-items: stretch; gap: 6px; padding-top: 10px; position: relative; width: 100%; }
     .bar-col { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; }
     .bar-wrapper { flex: 1; position: relative; margin-bottom: 22px; }
@@ -86,7 +84,6 @@
     .legend-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
     .dot { width: 12px; height: 12px; border-radius: 3px; display:inline-block; margin-right:6px;}
 
-    /* 요약 카드 */
     .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .summary-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
     .summary-card.group-card { background: #f0f6fc; border: 1px solid #cce0f5; }
@@ -96,7 +93,6 @@
     .badge-pos { background: #e0f2fe; color: var(--primary-light); }
     .badge-neg { background: #fee2e2; color: var(--negative); }
 
-    /* 편집 박스 & AI 분석 박스 */
     .edit-box { display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 8px; }
     .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .edit-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -109,7 +105,6 @@
     .ai-content { padding: 12px; font-size: 13px; color: var(--text); line-height: 1.6; background: #ffffff; }
     .margin-badge { font-size: 11px; background: #e0f2fe; color: var(--primary-light); padding: 3px 6px; border-radius: 4px; font-weight: 700; }
 
-    /* HR 화면 디자인 */
     .hr-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
     .hr-group { background: #f0f9ff; border-color: #bae6fd; }
     .hr-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; border-bottom: 1px dashed #cbd5e1; padding-bottom:8px;}
@@ -135,12 +130,15 @@
 </head>
 <body>
   
-  <div id="loadingOverlay"><div class="spinner"></div><div>데이터를 불러오는 중입니다...</div></div>
+  <div id="loadingOverlay"><div class="spinner"></div><div>데이터 불러오는 중...</div></div>
 
   <header>
     <div style="display:flex; align-items:center;">
-      <div class="header-title">🏢 2026년 광양서비스지원그룹</div>
-      </div>
+      <div class="header-title">🏢 광양서비스지원그룹</div>
+      <select id="yearSelect" class="year-select" onchange="loadData()">
+        <option value="2026" selected>2026년</option>
+      </select>
+    </div>
     <button class="admin-btn" onclick="toggleAdmin()" id="adminBtn">관리자 모드</button>
   </header>
 
@@ -157,7 +155,6 @@
       <button id="btn-광양차량지원" class="sec-btn" onclick="setSection('광양차량지원')">차량지원</button>
     </div>
 
-    <!-- 💰 View 1: 매출/손익 뷰 -->
     <div id="view-profit" class="view-section active">
       <div class="card">
         <div class="card-header"><h3 id="tableTitleProfit">🏢 그룹 손익표</h3><span style="font-size:12px;color:gray;">단위: 백만원</span></div>
@@ -167,7 +164,6 @@
         </table>
       </div>
 
-      <!-- 💡 추가된 KPI 실적 카드 영역 -->
       <div id="kpi-section" class="card" style="display:none;">
         <div class="card-header"><h3>🎯 그룹 KPI 목표 대비 실적</h3></div>
         <div id="kpi-content"></div>
@@ -196,7 +192,6 @@
       </div>
     </div>
 
-    <!-- 👥 View 2: 인원 현황 -->
     <div id="view-personnel" class="view-section">
       <div style="margin-bottom:12px; font-size:13px; color:var(--sub); text-align:right;">
         💡 장애인 산정: 남성중증x2, 남성경증x0.5 / 여성중증x2, 여성경증x1
@@ -206,8 +201,8 @@
   </div>
 
   <script>
-    // ⚠️ 구글 Apps Script 주소 (새로 발급받은 주소로 교체해주세요!)
-    const API_URL = "https://script.google.com/macros/s/AKfycbwdsaphMHPGr67xW0q9zOV8NswgMS09ujlbsJ_XdscdpvlPFB6GUj_m19oK5T_-Tmmgwg/exec";
+    // ⚠️ 구글 Apps Script 주소를 아래 따옴표 안에 꼭 넣어주세요!
+    const API_URL = "https://script.google.com/macros/s/AKfycbwDcsAC45jDutuT_QL1mSXDMJVRxODJrzJ6cNnqJ7jLUaVArwxu3Yj_nbO2WW-LW9jJSQ/exec";
     
     let isAdmin = false;
     let currentMode = 'group'; 
@@ -216,7 +211,7 @@
     let profitBase = {}, profitApp = {};
     let hrData = { "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} };
     
-    // 💡 KPI 타겟 데이터 변수
+    // 목표 기본값 세팅 (통신 실패시 대비 안전장치)
     let kpiTarget = { "매출액": 111.8, "매출총이익률": 5, "장애인산정인원": 15 };
 
     function showLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
@@ -234,13 +229,11 @@
       document.getElementById('tab-personnel').classList.toggle('active', mode === 'personnel');
       
       document.getElementById('section-buttons').style.display = mode === 'section' ? 'flex' : 'none';
-      
       document.getElementById('view-profit').classList.toggle('active', mode !== 'personnel');
       document.getElementById('view-personnel').classList.toggle('active', mode === 'personnel');
       
       document.getElementById('group-charts').style.display = mode === 'group' ? 'block' : 'none';
       document.getElementById('section-charts').style.display = mode === 'section' ? 'block' : 'none';
-
       document.getElementById('yearSelect').style.visibility = mode === 'personnel' ? 'hidden' : 'visible';
 
       updateUI();
@@ -260,24 +253,29 @@
         const res = await fetch(API_URL);
         const json = await res.json();
         
+        // 서버에서 에러를 보냈을 경우 잡아냄
+        if(json.error) throw new Error("서버 에러: " + json.error);
+
         buildProfitData(json.profit || [], year);
         buildHRData(json.personnel || []);
-        buildKPIData(json.kpi || []); // KPI 로드 추가
+        buildKPIData(json.kpi || []); 
         
         updateUI();
-      } catch (e) { alert("데이터 로드 실패"); }
-      showLoading(false);
+        showLoading(false);
+      } catch (e) { 
+        showLoading(false);
+        // 왜 로딩이 안되는지 이유를 화면에 띄워줍니다!
+        alert(`❌ 데이터를 불러오지 못했습니다.\n\n[확인사항]\n1. 구글 시트 Sheet3 존재 여부 확인\n2. 앱스 스크립트 '새 배포' 후 새 URL 복사/붙여넣기 했는지 확인\n\n상세 에러: ${e.message}`);
+      }
     }
 
-    // 💡 KPI 데이터 조립
     function buildKPIData(kpiArr) {
-      if (kpiArr && kpiArr.length > 0) {
-        kpiArr.forEach(row => {
-          let key = String(row["KPI"] || "").trim();
-          let val = Number(row["목표"] || 0);
-          if (key) kpiTarget[key] = val;
-        });
-      }
+      if (!kpiArr || kpiArr.length === 0) return;
+      kpiArr.forEach(row => {
+        let key = String(row["KPI"] || row["A"] || "").trim();
+        let val = Number(row["목표"] || row["B"] || 0);
+        if (key && !isNaN(val)) kpiTarget[key] = val;
+      });
     }
 
     function buildProfitData(pData, year) {
@@ -323,16 +321,12 @@
 
     function updateUI() {
       if(currentMode === 'personnel') renderHR();
-      else {
-        renderProfit();
-        renderKPI(); // KPI 렌더링 호출
-      }
+      else { renderProfit(); renderKPI(); }
     }
 
-    const fmt = n => n===0 ? "0" : n.toLocaleString();
-    const formatValue = (v, unit) => unit === "%" ? v.toFixed(1) : (Number.isInteger(v) ? fmt(v) : v.toFixed(1));
+    const fmt = n => (n||0)===0 ? "0" : Number(n).toLocaleString();
+    const formatValue = (v, unit) => unit === "%" ? Number(v||0).toFixed(1) : (Number.isInteger(v) ? fmt(v) : Number(v||0).toFixed(1));
 
-    // 🎯 KPI 진행률 및 목표 관리자 UI 렌더링
     function renderKPI() {
       if(currentMode !== 'group') {
         document.getElementById('kpi-section').style.display = 'none';
@@ -340,21 +334,19 @@
       }
       document.getElementById('kpi-section').style.display = 'block';
 
-      // 1. 실제 데이터(Actual) 계산
       let totalSales = 0, totalCogs = 0;
       profitApp["그룹전체"].forEach(r => { totalSales += r.s; totalCogs += r.c; });
       let totalGp = totalSales - totalCogs;
       let actualGpMargin = totalSales > 0 ? (totalGp / totalSales) * 100 : 0;
 
       let actualRec = 0;
-      Object.values(hrData).forEach(sec => {
-        actualRec += (sec.mS*2) + (sec.mM*0.5) + (sec.fS*2) + (sec.fM*1);
-      });
+      Object.values(hrData).forEach(sec => { actualRec += (sec.mS*2) + (sec.mM*0.5) + (sec.fS*2) + (sec.fM*1); });
 
+      // 안전장치 적용
       let kpiList = [
-        { key: "매출액", name: "총 매출액", unit: "백만원", actual: totalSales, target: kpiTarget["매출액"] },
-        { key: "매출총이익률", name: "매출(직접)총이익률", unit: "%", actual: actualGpMargin, target: kpiTarget["매출총이익률"] },
-        { key: "장애인산정인원", name: "장애인고용 산정인원", unit: "명", actual: actualRec, target: kpiTarget["장애인산정인원"] }
+        { key: "매출액", name: "총 매출액", unit: "백만원", actual: totalSales || 0, target: kpiTarget["매출액"] || 111.8 },
+        { key: "매출총이익률", name: "매출(직접)총이익률", unit: "%", actual: actualGpMargin || 0, target: kpiTarget["매출총이익률"] || 5 },
+        { key: "장애인산정인원", name: "장애인고용 산정인원", unit: "명", actual: actualRec || 0, target: kpiTarget["장애인산정인원"] || 15 }
       ];
 
       let html = "";
@@ -374,8 +366,7 @@
         html += `
           <div style="margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:6px;">
-              <span>${k.name}</span>
-              <span class="${textCls}">목표 달성률 ${rateStr}% ${icon}</span>
+              <span>${k.name}</span><span class="${textCls}">목표 달성률 ${rateStr}% ${icon}</span>
             </div>
             <div style="background:#e2e8f0; border-radius:8px; height:12px; overflow:hidden; position:relative;">
               <div style="background:${color}; width:${Math.min(rate, 100)}%; height:100%; transition:width 0.5s;"></div>
@@ -385,25 +376,16 @@
             </div>
           </div>
         `;
-
-        adminHtml += `
-          <div class="edit-row">
-            <label>${k.key}</label>
-            <input id="kpi-input-${idx}" value="${k.target}">
-          </div>
-        `;
+        adminHtml += `<div class="edit-row"><label>${k.key}</label><input id="kpi-input-${idx}" value="${k.target}"></div>`;
       });
 
       adminHtml += `</div><button class="save-btn" onclick="saveKPI()">KPI 목표 저장하기</button>`;
-
       document.getElementById('kpi-content').innerHTML = html;
 
       if(isAdmin) {
         document.getElementById('kpi-admin').style.display = 'block';
         document.getElementById('kpi-admin').innerHTML = adminHtml;
-      } else {
-        document.getElementById('kpi-admin').style.display = 'none';
-      }
+      } else { document.getElementById('kpi-admin').style.display = 'none'; }
     }
 
     function getAutoAnalysis(r) {
@@ -454,10 +436,7 @@
               <div class="edit-row"><label>판관-급여</label><input id="sgl-${i}" value="${r.sgL}"></div>
               <div class="edit-row"><label>판관-경비</label><input id="sge-${i}" value="${r.sgE}"></div>
             </div>
-            <div class="ai-box">
-              <div class="ai-title"><span>🤖 AI 자동 분석 리포트</span><span class="margin-badge">영업이익률: ${opMargin}%</span></div>
-              <div class="ai-content">${aiAnalysisText}</div>
-            </div>
+            <div class="ai-box"><div class="ai-title"><span>🤖 AI 자동 분석 리포트</span><span class="margin-badge">영업이익률: ${opMargin}%</span></div><div class="ai-content">${aiAnalysisText}</div></div>
             <button class="save-btn" onclick="saveProfit(${i})">손익 저장하기</button>
           </div></td>`;
         } else {
@@ -465,10 +444,7 @@
               <div style="font-size:12px; color:var(--sub); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
                 <span>📉 [원가] 노무비: <b>${fmt(r.cL)}</b> / 경비: <b>${fmt(r.cE)}</b></span><span>📉 [판관] 급여: <b>${fmt(r.sgL)}</b> / 경비: <b>${fmt(r.sgE)}</b></span>
               </div>
-              <div class="ai-box">
-                <div class="ai-title"><span>🤖 AI 자동 분석 리포트</span><span class="margin-badge">영업이익률: ${opMargin}%</span></div>
-                <div class="ai-content">${aiAnalysisText}</div>
-              </div>
+              <div class="ai-box"><div class="ai-title"><span>🤖 AI 자동 분석 리포트</span><span class="margin-badge">영업이익률: ${opMargin}%</span></div><div class="ai-content">${aiAnalysisText}</div></div>
             </div></td>`;
         }
         tbody.appendChild(dTr);
@@ -579,7 +555,6 @@
       container.innerHTML += makeCard("🚗 차량지원", "광양차량지원", hrData["광양차량지원"], false);
     }
 
-    // 💾 KPI 목표 저장 로직
     async function saveKPI() {
       let keys = ["매출액", "매출총이익률", "장애인산정인원"];
       let payload = { type: 'kpi_multi', kpis: [] };
@@ -593,8 +568,7 @@
         await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
         alert("🎯 KPI 목표가 성공적으로 변경 및 저장되었습니다!");
         await loadData();
-      } catch(e) { alert("저장에 실패했습니다."); }
-      showLoading(false);
+      } catch(e) { alert("저장에 실패했습니다."); showLoading(false); }
     }
 
     async function saveProfit(i) {
@@ -629,8 +603,7 @@
         await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
         alert("성공적으로 저장되었습니다.");
         await loadData();
-      } catch(e) { alert("저장에 실패했습니다."); }
-      showLoading(false);
+      } catch(e) { alert("저장에 실패했습니다."); showLoading(false); }
     }
 
     window.onload = loadData;
