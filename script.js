@@ -2,7 +2,7 @@
   /* ===============================
      ✅ API 및 환경 설정
   ================================ */
-  const API_URL = "https://script.google.com/macros/s/AKfycbwqyd6vXt_95BBtNdwd_UoSE_XVbs5B9gxGFe6Um2cUAHfCtl-d6XDULoQOJXR8tgoA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycby-J27YZjtkw04iurB1YD8vpTVvlGHOFgzq58m0UpEdo5iZs4hI8OC8nLm0oYI0Do91/exec";
   
   let isAdmin = false;
   const ADMIN_PASS = "admin1234";
