@@ -174,7 +174,7 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzpB4sXlD5pAeyAnluX5r5IHrYCQ2bQBMH_UsmuvEgPHtJaHPLsL7Wd7QGlPMk9vfTa/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx471Y-fPRN3mkdj1Q99O0IR-zi74bOl5xSKLe4QbtOjDlHnDokGpnMyJDYmK4gPgZh/exec";
     const TARGET_YEAR = "2026"; // 고정 연도
     
     let isAdmin = false; 
@@ -284,23 +284,36 @@
       });
     }
 
-    function buildProfitData(pData, year) {
+        function buildProfitData(pData, year) {
       const empty12 = () => Array.from({length:12}, (_,i)=>({ m:`${i+1}월`, s:0, cL:0, cE:0, sgL:0, sgE:0, desc:"" }));
       profitBase = { "광양사무지원":empty12(), "광양총무지원":empty12(), "광양차량지원":empty12() };
+      
       let groupDesc = Array(12).fill(""); 
 
       pData.forEach(r => {
-        let ym = String(r["년월"]||"").trim(); let sec = String(r["섹션"]||"").trim();
-        if(ym.startsWith(year)) {
-          let idx = Number(ym.slice(5,7))-1;
-          if(idx>=0 && idx<=11) {
-            if(profitBase[sec]) {
-              let t = profitBase[sec][idx];
-              t.s+=Number(r["매출액"]||0); t.cL+=Number(r["원가-노무비"]||0); t.cE+=Number(r["원가-경비"]||0); 
-              t.sgL+=Number(r["판관-급여"]||0); t.sgE+=Number(r["판관-경비"]||0);
-              t.desc = String(r["분석내용"]||"").trim();
-            }
-            if(sec === "그룹전체") groupDesc[idx] = String(r["분석내용"]||"").trim();
+        let ym = String(r["년월"]||"").trim(); 
+        let sec = String(r["섹션"]||"").trim();
+        
+        let monthIdx = -1;
+        
+        // 🚨 날짜 포맷이 '2026-02' 이든 시트의 '2026. 2. 1' 이든 완벽하게 월(Month) 추출
+        if (ym.startsWith(year)) {
+          if (ym.includes("-")) {
+            monthIdx = Number(ym.split("-")[1]) - 1; // "2026-02" 형태
+          } else if (ym.includes(".")) {
+            monthIdx = Number(ym.split(".")[1].trim()) - 1; // "2026. 2. 1" 형태
+          }
+        }
+
+        if(monthIdx >= 0 && monthIdx <= 11) {
+          if(profitBase[sec]) {
+            let t = profitBase[sec][monthIdx];
+            t.s+=Number(r["매출액"]||0); t.cL+=Number(r["원가-노무비"]||0); t.cE+=Number(r["원가-경비"]||0); 
+            t.sgL+=Number(r["판관-급여"]||0); t.sgE+=Number(r["판관-경비"]||0);
+            t.desc = String(r["분석내용"]||"").trim();
+          }
+          if(sec === "그룹전체") {
+            groupDesc[monthIdx] = String(r["분석내용"]||"").trim();
           }
         }
       });
@@ -316,6 +329,7 @@
       
       profitApp = { "그룹전체": pGrp, "광양사무지원": calcP(profitBase["광양사무지원"]), "광양총무지원": calcP(profitBase["광양총무지원"]), "광양차량지원": calcP(profitBase["광양차량지원"]) };
     }
+
 
     function buildHRData(hrArray) {
       hrData = { "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} };
