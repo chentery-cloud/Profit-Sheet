@@ -163,23 +163,41 @@
   /* ===============================
      ✅ UI 및 탭 제어
   ================================ */
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('tab-group').classList.toggle('active', mode === 'group');
-    document.getElementById('tab-section').classList.toggle('active', mode === 'section');
-    document.getElementById('tab-kpi').classList.toggle('active', mode === 'kpi');
-    document.getElementById('tab-personnel').classList.toggle('active', mode === 'personnel');
-    
-    document.getElementById('section-buttons').style.display = mode === 'section' ? 'flex' : 'none';
-    document.getElementById('view-profit').classList.toggle('active', mode === 'group' || mode === 'section');
-    document.getElementById('view-kpi').classList.toggle('active', mode === 'kpi');
-    document.getElementById('view-personnel').classList.toggle('active', mode === 'personnel');
-    
-    document.getElementById('group-charts').style.display = mode === 'group' ? 'block' : 'none';
-    document.getElementById('section-charts').style.display = mode === 'section' ? 'block' : 'none';
+    function setMode(mode) {
+      currentMode = mode;
+      
+      // 1. 탭 버튼 색상 변경 (4개 모두 제어)
+      document.getElementById('tab-group').classList.toggle('active', mode === 'group');
+      document.getElementById('tab-section').classList.toggle('active', mode === 'section');
+      document.getElementById('tab-kpi').classList.toggle('active', mode === 'kpi'); // 누락되었던 KPI 탭 추가
+      document.getElementById('tab-personnel').classList.toggle('active', mode === 'personnel');
+      
+      // 2. 부서 선택 버튼은 섹션매출에서만 보이기
+      document.getElementById('section-buttons').style.display = mode === 'section' ? 'flex' : 'none';
+      
+      // 3. 메인 화면 3가지 중 맞는 것만 보여주기
+      document.getElementById('view-profit').classList.toggle('active', mode === 'group' || mode === 'section');
+      document.getElementById('view-kpi').classList.toggle('active', mode === 'kpi'); // 누락되었던 KPI 화면 추가
+      document.getElementById('view-personnel').classList.toggle('active', mode === 'personnel');
+      
+      // 4. 매출 화면 내부의 차트 제어
+      document.getElementById('group-charts').style.display = mode === 'group' ? 'block' : 'none';
+      document.getElementById('section-charts').style.display = mode === 'section' ? 'block' : 'none';
 
-    updateDashboard();
-  }
+      updateUI();
+    }
+
+    // 🌟 화면 업데이트 분기 처리 (여기가 핵심 원인이었습니다)
+    function updateUI() { 
+      if (currentMode === 'kpi') {
+        renderKPI(); // KPI 탭일 때는 KPI 화면만 그리기
+      } else if (currentMode === 'personnel') {
+        renderHR();  // 인원 탭일 때는 인원 화면만 그리기
+      } else {
+        renderProfit(); // 그 외(그룹매출, 섹션매출)일 때는 손익표 그리기
+      }
+    }
+
 
   function setSection(sec) { currentSection = sec; document.querySelectorAll('.sec-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(`btn-${sec}`).classList.add('active'); updateDashboard(); }
   function toggleDetail(index) { const detailRow = document.getElementById(`detail-${index}`); const icon = document.getElementById(`icon-${index}`); if (!detailRow) return; if (detailRow.style.display === 'table-row') { detailRow.style.display = 'none'; if (icon) icon.innerText = '🔽'; } else { detailRow.style.display = 'table-row'; if (icon) icon.innerText = '🔼'; } }
