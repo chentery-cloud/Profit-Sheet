@@ -468,4 +468,59 @@
   window.onload = () => {
     loadData();
   };
+
+// 모달창 열기
+function openAdminModal() {
+  document.getElementById('adminModal').style.display = 'flex';
+  document.getElementById('loginErrorMsg').style.display = 'none';
+  document.getElementById('adminId').value = '';
+  document.getElementById('adminPw').value = '';
+}
+
+// 모달창 닫기
+function closeAdminModal() {
+  document.getElementById('adminModal').style.display = 'none';
+}
+
+// 로그인 시도 (백엔드로 데이터 전송)
+function attemptLogin() {
+  var id = document.getElementById('adminId').value;
+  var pw = document.getElementById('adminPw').value;
+
+  if(!id || !pw) {
+    alert("아이디와 비밀번호를 모두 입력해주세요.");
+    return;
+  }
+
+  // 로딩 표시 (버튼 글자 변경)
+  var loginBtn = event.target;
+  var originalText = loginBtn.innerText;
+  loginBtn.innerText = "확인 중...";
+
+  // 구글 서버의 checkAdminLogin 함수 호출
+  google.script.run
+    .withSuccessHandler(function(isSuccess) {
+      loginBtn.innerText = originalText; // 버튼 글자 원상복구
+      
+      if (isSuccess) {
+        // 로그인 성공 시
+        closeAdminModal();
+        alert("관리자 모드로 전환되었습니다!");
+        
+        // ★ 여기에 관리자 모드일 때 보여줄 화면이나 기능을 활성화하는 코드를 넣으시면 됩니다.
+        // 예: document.getElementById('adminPanel').style.display = 'block';
+        
+      } else {
+        // 로그인 실패 시
+        document.getElementById('loginErrorMsg').style.display = 'block';
+      }
+    })
+    .withFailureHandler(function(error) {
+      loginBtn.innerText = originalText;
+      alert("서버 오류가 발생했습니다: " + error.message);
+    })
+    .checkAdminLogin(id, pw); // 입력한 ID, PW를 서버로 보냄
+}
+
+
 </script>
