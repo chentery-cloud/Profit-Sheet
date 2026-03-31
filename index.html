@@ -381,12 +381,12 @@
       let actualRec = 0; Object.values(hrData).forEach(sec => { actualRec += (sec.mS*2) + (sec.mM*0.5) + (sec.fS*2) + (sec.fM*1); });
 
       let kpiList = [
-        { key: "매출액", name: "총 매출액", unit: "백만원", actual: totalSales || 0, target: kpiTarget["매출액"] || 11180, auto: true },
-        { key: "매출총이익률", name: "매출(직접)총이익률", unit: "%", actual: actualGpMargin || 0, target: kpiTarget["매출총이익률"] || 5, auto: true },
-        { key: "장애인산정인원", name: "장애인고용 산정인원", unit: "명", actual: actualRec || 0, target: kpiTarget["장애인산정인원"] || 15, auto: true },
-        { key: "건강개선목표달성률(%)", name: "건강개선목표달성률", unit: "%", actual: kpiManualActuals["건강개선목표달성률(%)"], target: kpiTarget["건강개선목표달성률(%)"], auto: false },
-        { key: "TRIFR(LTIFR)", name: "TRIFR(LTIFR)", unit: "건", actual: kpiManualActuals["TRIFR(LTIFR)"], target: kpiTarget["TRIFR(LTIFR)"], auto: false, lowerIsBetter: true },
-        { key: "교육이수시간(Hr)", name: "교육이수시간", unit: "Hr", actual: kpiManualActuals["교육이수시간(Hr)"], target: kpiTarget["교육이수시간(Hr)"], auto: false }
+        { key: "매출액", name: "1.총 매출액", unit: "백만원", actual: totalSales || 0, target: kpiTarget["매출액"] || 11180, auto: true },
+        { key: "매출총이익률", name: "2.매출(직접)총이익률", unit: "%", actual: actualGpMargin || 0, target: kpiTarget["매출총이익률"] || 5, auto: true },
+        { key: "장애인산정인원", name: "3.장애인고용 산정인원", unit: "명", actual: actualRec || 0, target: kpiTarget["장애인산정인원"] || 15, auto: true },
+        { key: "건강개선목표달성률(%)", name: "4.건강개선 목표 달성률", unit: "%", actual: kpiManualActuals["건강개선목표달성률(%)"], target: kpiTarget["건강개선목표달성률(%)"], auto: false },
+        { key: "TRIFR(LTIFR)", name: "5.TRIFR(LTIFR)", unit: "건", actual: kpiManualActuals["TRIFR(LTIFR)"], target: kpiTarget["TRIFR(LTIFR)"], auto: false, lowerIsBetter: true },
+        { key: "교육이수시간(Hr)", name: "6.교육 이수시간", unit: "Hr", actual: kpiManualActuals["교육이수시간(Hr)"], target: kpiTarget["교육이수시간(Hr)"], auto: false }
       ];
 
       let html = ""; let adminHtml = `<h4 style="margin:0 0 10px 0; font-size:13px; color:var(--primary);">⚙️ KPI 목표 및 실적 수정</h4><div class="edit-grid" style="grid-template-columns: 1fr;">`;
