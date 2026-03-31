@@ -5,13 +5,13 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbwOw2118r0w8k_G99nIG_BLQSeI7ZY3l1nneJLhYw_9nV6UbGXi4AZ5t_2akO-0yXgV/exec";
   
   let isAdmin = false;
-  const ADMIN_PASS = "admin1234";
   let currentYear = "2026";
 
   let baseData = {};
   let appData = {};
   let currentMode = 'group';
   let currentSection = '광양사무지원';
+  let adminCredentials = []; // 🔑 구글 시트에서 불러올 관리자 계정 정보 저장용
 
   const titleMap = {
     "그룹전체": "🏢 광양서비스지원그룹",
@@ -25,12 +25,12 @@
   ================================ */
   function showLoading(show, text = "데이터를 불러오는 중입니다...") {
     const overlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
+    const loadingText = document.getElementById('loadingText'); // id="loadText" 인 경우 수정 필요할 수 있음
     if (loadingText) loadingText.innerText = text;
     if (overlay) overlay.style.display = show ? 'flex' : 'none';
   }
 
-  // 1️⃣ 캐시 방지(Cache Buster) 적용
+  // 1️⃣ 캐시 방지(Cache Buster) 적용하여 전체 데이터 가져오기
   async function fetchRecords() {
     try {
       const urlWithCacheBuster = `${API_URL}?t=${new Date().getTime()}`;
@@ -38,11 +38,12 @@
       return await res.json();
     } catch (e) {
       alert("데이터를 불러오는데 실패했습니다.");
-      return [];
+      return null;
     }
   }
 
-  function buildBaseDataFromSheet(records, year) {
+  // 2️⃣ profit 배열만 받아서 기존 로직대로 계산
+  function buildBaseDataFromSheet(profitRecords, year) {
     const makeEmpty = () => Array.from({ length: 12 }, (_, i) => ({
       month: `${i + 1}월`,
       sales: 0, cogs: 0, gp: 0, sga: 0, op: 0,
@@ -55,7 +56,7 @@
       "광양차량지원": makeEmpty()
     };
 
-    records.forEach(r => {
+    profitRecords.forEach(r => {
       if (!r["년월"] || !r["년월"].startsWith(year)) return;
       if (!data[r["섹션"]]) return;
 
@@ -108,41 +109,77 @@
     };
   }
 
+  // 🚀 초기 로드
   async function loadData() {
     showLoading(true, "데이터를 불러오는 중입니다...");
-    const records = await fetchRecords();
-    baseData = buildBaseDataFromSheet(records, currentYear);
-    processData();
-    updateDashboard();
+    const json = await fetchRecords();
+    
+    if (json) {
+      // ✅ 1. 관리자 정보 배열 따로 저장 (로그인 시 사용)
+      if (json.admin) adminCredentials = json.admin;
+      
+      // ✅ 2. 수익(profit) 배열만 추출하여 buildBaseDataFromSheet에 넘김
+      baseData = buildBaseDataFromSheet(json.profit || [], currentYear);
+      processData();
+      updateDashboard();
+    }
     showLoading(false);
   }
 
+
   /* ===============================
-     ✅ UI 및 기능 제어
+     ✅ 모달창 및 로그인 관리 (수정됨)
   ================================ */
-  function changeYear() {
-    currentYear = document.getElementById("yearSelect").value;
-    loadData();
+  function openAdminModal() {
+    document.getElementById('adminModal').style.display = 'flex';
+    document.getElementById('loginErrorMsg').style.display = 'none';
+    document.getElementById('adminId').value = '';
+    document.getElementById('adminPw').value = '';
   }
 
-  function toggleAdmin() {
+  function closeAdminModal() {
+    document.getElementById('adminModal').style.display = 'none';
+  }
+
+  function attemptLogin() {
+    var id = document.getElementById('adminId').value;
+    var pw = document.getElementById('adminPw').value;
+
+    if(!id || !pw) {
+      alert("아이디와 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+
+    // 🔑 미리 불러와둔 관리자 계정 배열(adminCredentials)과 비교하여 즉시 로그인 (서버 요청 필요 없음!)
+    const matched = adminCredentials.find(c => String(c.id) === String(id) && String(c.pw) === String(pw));
+    
+    // 시트에 있는 계정이거나, 백업용(admin/admin1234)이면 통과
+    if (matched || (id === 'admin' && pw === 'admin1234')) {
+      isAdmin = true;
+      document.getElementById('adminBtn').innerText = '⚙️ 관리자 로그아웃';
+      closeAdminModal();
+      alert('관리자 모드로 접속했습니다.');
+      updateDashboard(); // 관리자 UI 활성화 갱신
+    } else {
+      document.getElementById('loginErrorMsg').style.display = 'block';
+    }
+  }
+
+  function handleAdminToggle() {
     if (isAdmin) {
       isAdmin = false;
-      document.getElementById('adminBtn').innerText = '관리자 로그인';
+      document.getElementById('adminBtn').innerText = '⚙️ 관리자 모드';
       alert('관리자 모드가 종료되었습니다.');
+      updateDashboard(); // 일반 모드로 화면 갱신
     } else {
-      const pass = prompt('관리자 비밀번호를 입력하세요:');
-      if (pass === ADMIN_PASS) {
-        isAdmin = true;
-        document.getElementById('adminBtn').innerText = '관리자 로그아웃';
-        alert('관리자 모드가 활성화되었습니다.');
-      } else if (pass !== null) {
-        alert('비밀번호가 올바르지 않습니다.');
-      }
+      openAdminModal();
     }
-    updateDashboard();
   }
 
+
+  /* ===============================
+     ✅ UI 및 탭 제어
+  ================================ */
   function setMode(mode) {
     currentMode = mode;
     document.getElementById('tab-group').classList.toggle('active', mode === 'group');
@@ -172,6 +209,7 @@
       if (icon) icon.innerText = '🔼';
     }
   }
+
 
   /* ===============================
      ✅ 데이터 포맷 및 렌더링
@@ -213,14 +251,18 @@
     const targetKey = currentMode === 'group' ? '그룹전체' : currentSection;
     const data = appData[targetKey];
 
-    document.getElementById("tableTitle").innerText = `[${currentYear}] ${titleMap[targetKey]} 손익표`;
+    const tableTitleEl = document.getElementById("tableTitle");
+    if(tableTitleEl) tableTitleEl.innerText = `[${currentYear}] ${titleMap[targetKey]} 손익표`;
 
     if (currentMode === 'section') {
-      document.getElementById("sectionSalesChartTitle").innerText = `📊 ${titleMap[targetKey]} 매출액 추이`;
-      document.getElementById("sectionOpChartTitle").innerText = `📈 ${titleMap[targetKey]} 영업이익 추이`;
+      const sTitle = document.getElementById("sectionSalesChartTitle");
+      const oTitle = document.getElementById("sectionOpChartTitle");
+      if(sTitle) sTitle.innerText = `📊 ${titleMap[targetKey]} 매출액 추이`;
+      if(oTitle) oTitle.innerText = `📈 ${titleMap[targetKey]} 영업이익 추이`;
     }
 
     const tbody = document.getElementById("tableBody");
+    if(!tbody) return; // tbody가 없는 환경 에러 방지
     tbody.innerHTML = "";
 
     let tSales = 0, tCogs = 0, tGp = 0, tSga = 0, tOp = 0;
@@ -228,6 +270,8 @@
     data.forEach((row, idx) => {
       tSales += row.sales; tCogs += row.cogs; tGp += row.gp; tSga += row.sga; tOp += row.op;
 
+      // 데이터가 없는 행을 숨기고 싶다면 여기에 조건 추가 (ex. if (!isAdmin && row.sales === 0) return;)
+      
       const tr = document.createElement("tr");
       tr.className = "main-row";
       tr.onclick = () => toggleDetail(idx);
@@ -246,6 +290,7 @@
       detailTr.id = `detail-${idx}`;
       detailTr.className = "detail-row";
 
+      // 🌟 관리자 모드인 경우 입력 폼 렌더링, 일반 모드는 분석 코멘트 렌더링
       if (currentMode === 'section' && isAdmin) {
         detailTr.innerHTML = `
           <td colspan="6" style="padding:0; border:none;">
@@ -255,7 +300,7 @@
               <div class="edit-row"><label>원가-경비</label><input type="number" value="${row.cogs_exp}" /></div>
               <div class="edit-row"><label>판관-급여</label><input type="number" value="${row.sga_labor}" /></div>
               <div class="edit-row"><label>판관-경비</label><input type="number" value="${row.sga_exp}" /></div>
-              <div class="edit-actions"><button class="save-btn" onclick="saveToSheet(this, ${idx})">구글 시트에 저장</button></div>
+              <div class="edit-actions"><button class="save-btn" onclick="saveToSheet(this, ${idx})">데이터 저장 (빠른 반영)</button></div>
             </div>
           </td>`;
       } else {
@@ -295,8 +340,9 @@
     }
   }
 
+
   /* ===============================
-     ✅ 저장 기능 (API POST) - 빠른 UI 업데이트 반영 (Optimistic Update)
+     ✅ 저장 기능 (Optimistic Update)
   ================================ */
   async function saveToSheet(btn, idx) {
     const inputs = btn.closest('.edit-box').querySelectorAll('input');
@@ -309,6 +355,7 @@
     const sgaExp = Number(inputs[4].value || 0);
 
     const payload = {
+      type: 'profit',  // 서버(doPost)에서 인식하도록 타입 추가
       yearMonth: `${currentYear}-${String(idx + 1).padStart(2, "0")}`,
       section: currentSection,
       sales: sales,
@@ -324,17 +371,16 @@
       // 1. 구글 시트로 백그라운드 전송
       await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS 방지
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
         body: JSON.stringify(payload)
       });
 
-      // 2. 서버 응답을 기다리지 않고, 로컬 데이터를 즉시 재계산 및 덮어쓰기
+      // 2. 서버 응답을 기다리지 않고 로컬 데이터 즉시 수정
       const cogs = cogsLabor + cogsExp;
       const gp = sales - cogs;
       const sga = sgaLabor + sgaExp;
       const op = gp - sga;
 
-      // 내가 수정한 섹션의 데이터만 바로 업데이트
       baseData[currentSection][idx] = {
         ...baseData[currentSection][idx],
         sales: sales,
@@ -348,12 +394,10 @@
         op: op
       };
 
-      alert("구글 시트에 성공적으로 저장되었습니다.");
-      
-      // 3. 화면 갱신 (서버에서 다시 안 불러와도 이미 수정한 값으로 다시 그려짐)
+      // 3. 화면 갱신
       updateDashboard();
       
-      // 4. 방금 수정한 탭을 닫히지 않고 다시 열어두기
+      // 4. 방금 수정한 탭 다시 열어두기
       const detailRow = document.getElementById(`detail-${idx}`);
       const icon = document.getElementById(`icon-${idx}`);
       if (detailRow) detailRow.style.display = 'table-row';
@@ -367,8 +411,9 @@
     }
   }
 
+
   /* ===============================
-     ✅ 차트 그리기 함수 (변경 없음)
+     ✅ 차트 그리기 함수
   ================================ */
   function drawBarChart(containerId, data, key, positiveColor) {
     const chartArea = document.getElementById(containerId);
@@ -468,59 +513,4 @@
   window.onload = () => {
     loadData();
   };
-
-// 모달창 열기
-function openAdminModal() {
-  document.getElementById('adminModal').style.display = 'flex';
-  document.getElementById('loginErrorMsg').style.display = 'none';
-  document.getElementById('adminId').value = '';
-  document.getElementById('adminPw').value = '';
-}
-
-// 모달창 닫기
-function closeAdminModal() {
-  document.getElementById('adminModal').style.display = 'none';
-}
-
-// 로그인 시도 (백엔드로 데이터 전송)
-function attemptLogin() {
-  var id = document.getElementById('adminId').value;
-  var pw = document.getElementById('adminPw').value;
-
-  if(!id || !pw) {
-    alert("아이디와 비밀번호를 모두 입력해주세요.");
-    return;
-  }
-
-  // 로딩 표시 (버튼 글자 변경)
-  var loginBtn = event.target;
-  var originalText = loginBtn.innerText;
-  loginBtn.innerText = "확인 중...";
-
-  // 구글 서버의 checkAdminLogin 함수 호출
-  google.script.run
-    .withSuccessHandler(function(isSuccess) {
-      loginBtn.innerText = originalText; // 버튼 글자 원상복구
-      
-      if (isSuccess) {
-        // 로그인 성공 시
-        closeAdminModal();
-        alert("관리자 모드로 전환되었습니다!");
-        
-        // ★ 여기에 관리자 모드일 때 보여줄 화면이나 기능을 활성화하는 코드를 넣으시면 됩니다.
-        // 예: document.getElementById('adminPanel').style.display = 'block';
-        
-      } else {
-        // 로그인 실패 시
-        document.getElementById('loginErrorMsg').style.display = 'block';
-      }
-    })
-    .withFailureHandler(function(error) {
-      loginBtn.innerText = originalText;
-      alert("서버 오류가 발생했습니다: " + error.message);
-    })
-    .checkAdminLogin(id, pw); // 입력한 ID, PW를 서버로 보냄
-}
-
-
 </script>
