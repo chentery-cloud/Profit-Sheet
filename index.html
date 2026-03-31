@@ -233,16 +233,24 @@
     }
     // ------------------------------------
 
-    function setMode(mode) {
+        function setMode(mode) {
       currentMode = mode;
+      
+      // 1. 탭 버튼 색상 변경 (4개 모두 제어)
       document.getElementById('tab-group').classList.toggle('active', mode === 'group');
       document.getElementById('tab-section').classList.toggle('active', mode === 'section');
+      document.getElementById('tab-kpi').classList.toggle('active', mode === 'kpi'); // 누락되었던 KPI 탭 추가
       document.getElementById('tab-personnel').classList.toggle('active', mode === 'personnel');
       
+      // 2. 부서 선택 버튼은 섹션매출에서만 보이기
       document.getElementById('section-buttons').style.display = mode === 'section' ? 'flex' : 'none';
-      document.getElementById('view-profit').classList.toggle('active', mode !== 'personnel');
+      
+      // 3. 메인 화면 3가지 중 맞는 것만 보여주기
+      document.getElementById('view-profit').classList.toggle('active', mode === 'group' || mode === 'section');
+      document.getElementById('view-kpi').classList.toggle('active', mode === 'kpi'); // 누락되었던 KPI 화면 추가
       document.getElementById('view-personnel').classList.toggle('active', mode === 'personnel');
       
+      // 4. 매출 화면 내부의 차트 제어
       document.getElementById('group-charts').style.display = mode === 'group' ? 'block' : 'none';
       document.getElementById('section-charts').style.display = mode === 'section' ? 'block' : 'none';
 
@@ -348,7 +356,15 @@
       });
     }
 
-    function updateUI() { if(currentMode === 'personnel') { renderKPI(); renderHR(); } else { renderProfit(); } }
+    function updateUI() { 
+      if (currentMode === 'kpi') {
+        renderKPI(); // KPI 탭일 때는 KPI 화면만 그리기
+      } else if (currentMode === 'personnel') {
+        renderHR();  // 인원 탭일 때는 인원 화면만 그리기
+      } else {
+        renderProfit(); // 그 외(그룹매출, 섹션매출)일 때는 손익표 그리기
+      }
+    }
 
     const fmt = n => (n||0)===0 ? "0" : Number(n).toLocaleString();
     const formatValue = (v, unit) => unit === "%" ? Number(v||0).toFixed(1) : (Number.isInteger(v) ? fmt(v) : Number(v||0).toFixed(1));
