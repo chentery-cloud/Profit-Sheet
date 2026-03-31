@@ -121,8 +121,10 @@
     <div class="tabs">
       <button id="tab-group" class="tab-btn active" onclick="setMode('group')">🏢 그룹매출</button>
       <button id="tab-section" class="tab-btn" onclick="setMode('section')">📊 섹션매출</button>
-      <button id="tab-personnel" class="tab-btn" onclick="setMode('personnel')">👥 인원/KPI 현황</button>
+      <button id="tab-kpi" class="tab-btn" onclick="setMode('kpi')">🎯 KPI 현황</button>
+      <button id="tab-personnel" class="tab-btn" onclick="setMode('personnel')">👥 인원 현황</button>
     </div>
+
 
     <div id="section-buttons" class="section-buttons">
       <button id="btn-광양사무지원" class="sec-btn active" onclick="setSection('광양사무지원')">사무지원</button>
@@ -158,20 +160,23 @@
       </div>
     </div>
 
-    <div id="view-personnel" class="view-section">
-      <!-- KPI 영역을 인사 탭 상단으로 이동 -->
+        <!-- 🎯 1. KPI 전용 화면 -->
+    <div id="view-kpi" class="view-section">
       <div id="kpi-section" class="card">
         <div class="card-header"><h3>🎯 그룹 KPI 목표 대비 실적</h3></div>
         <div id="kpi-content"></div>
         <div id="kpi-admin" style="display:none; margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);"></div>
       </div>
+    </div>
 
+    <!-- 👥 2. 인원 현황 전용 화면 -->
+    <div id="view-personnel" class="view-section">
       <div style="margin-bottom:11px; font-size:12px; color:var(--sub); text-align:right;">
         💡 장애인 산정: 남성중증x2, 남성경증x0.5 / 여성중증x2, 여성경증x1
       </div>
       <div id="hrCardsContainer"></div>
     </div>
-  </div>
+
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbx471Y-fPRN3mkdj1Q99O0IR-zi74bOl5xSKLe4QbtOjDlHnDokGpnMyJDYmK4gPgZh/exec";
