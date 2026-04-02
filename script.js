@@ -2,7 +2,7 @@
   /* ===============================
      ✅ API 및 환경 설정
   ================================ */
-  const API_URL = "https://script.google.com/macros/s/AKfycbziYOWjKrXBkqq7ZnAPNi_uy6zxt2Cp468XvVL5YMqmRNZHbt1f5mf_mt3dxHcr9dWU/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxpgzFc1W5Cr0uCc6v2XWSxPrvTZyZ1000OernKcycO61v_ukv2Q-BjFXXVHwQdImp-/exec";
   
   let isAdmin = false;
   let currentYear = "2026";
