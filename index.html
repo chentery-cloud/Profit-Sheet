@@ -8,21 +8,16 @@
   <!-- ==========================================
        📱 스마트폰 홈 화면(바탕화면) 아이콘 설정
   =========================================== -->
-  
-  <!-- 🍎 아이폰(iOS) 전용 설정 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="P-Humans"> <!-- 아이콘 밑에 표시될 이름 -->
+  <meta name="apple-mobile-web-app-title" content="P-Humans"> 
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" sizes="192x192" href="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-512.png">
 
-  <!-- 🤖 안드로이드(Chrome, 삼성인터넷) 및 웹 브라우저 탭 아이콘 설정 -->
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="icon" type="image/png" sizes="192x192" href="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-512.png">
 
-
-  <!-- 구글 스크립트 환경용 특수 Manifest (안드로이드에서 앱처럼 인식하게 함) -->
   <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"Frofit Sheet","short_name":"P-Humans","display":"standalone"}'>
 
   <!-- 기존 폰트 및 CSS 시작 -->
@@ -32,12 +27,69 @@
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
 
- 
+    /* ==========================================
+       🚀 고급 스플래시 화면 (Splash Screen) CSS
+    ========================================== */
+    #splashScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #004790 0%, #001f40 100%);
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+    }
+    #splashScreen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .splash-content {
+      text-align: center;
+      color: white;
+      animation: splashFadeIn 1s ease-out;
+    }
+    .splash-logo {
+      width: 110px;
+      height: 110px;
+      border-radius: 25px; 
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      margin-bottom: 24px;
+    }
+    .splash-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      letter-spacing: 1px;
+    }
+    .splash-subtitle {
+      font-size: 15px;
+      color: #a0c4ff;
+      margin: 0 0 40px 0;
+      font-weight: 400;
+    }
+    .splash-loader {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      margin: 0 auto;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes splashFadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-    
-    #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: 700; color: var(--primary); }
+    /* 기존 내부 로딩 CSS (데이터 갱신 시 사용) */
+    #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; font-weight: 700; color: var(--primary); }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
     header { background: var(--primary); color: white; padding: 16px 20px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     .header-title { font-size: 16px; font-weight: 700; }
     .admin-btn { background: white; color: var(--primary); border: none; border-radius: 6px; font-size: 12px; font-weight: 700; padding: 8px 12px; cursor: pointer; }
@@ -66,7 +118,7 @@
     .detail-row { display: none; }
     .total-row td { background: #f1f3f5; font-weight: 700; border-top: 2px solid var(--sub); }
     
-    /* 차트 CSS 개선 */
+    /* 차트 CSS */
     .chart-container { height: 180px; display: flex; align-items: stretch; gap: 6px; padding-top: 10px; position: relative; width: 100%; }
     .bar-col { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; }
     .bar-wrapper { flex: 1; position: relative; margin-bottom: 22px; }
@@ -121,17 +173,21 @@
 </head>
 <body>
   
- <!-- 🚀 앱 스플래시 화면 -->
-<div id="splashScreen">
-  <div class="splash-content">
-    <!-- 올려주셨던 GitHub 아이콘 주소를 그대로 사용했습니다! -->
-    <img src="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-192.png" alt="P-Humans Logo" class="splash-logo">
-    <h1 class="splash-title">P-Humans</h1>
-    <p class="splash-subtitle">경영 실적 대시보드 동기화 중...</p>
-    <div class="splash-loader"></div>
+  <!-- 🚀 앱 스플래시 화면 -->
+  <div id="splashScreen">
+    <div class="splash-content">
+      <img src="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-192.png" alt="P-Humans Logo" class="splash-logo">
+      <h1 class="splash-title">P-Humans</h1>
+      <p class="splash-subtitle">경영 실적 대시보드 동기화 중...</p>
+      <div class="splash-loader"></div>
+    </div>
   </div>
-</div>
 
+  <!-- 데이터 갱신 시 보여줄 기존 로딩 (처음 켤 때 제외하고 내부적으로 쓰임) -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div id="loadText">데이터 불러오는 중...</div>
+  </div>
 
   <header>
     <div style="display:flex; align-items:center;">
@@ -159,7 +215,6 @@
       <button id="tab-kpi" class="tab-btn" onclick="setMode('kpi')">🎯 KPI 현황</button>
       <button id="tab-personnel" class="tab-btn" onclick="setMode('personnel')">👥 인원 현황</button>
     </div>
-
 
     <div id="section-buttons" class="section-buttons">
       <button id="btn-광양사무지원" class="sec-btn active" onclick="setSection('광양사무지원')">사무지원</button>
@@ -195,7 +250,7 @@
       </div>
     </div>
 
-        <!-- 🎯 1. KPI 전용 화면 -->
+    <!-- 🎯 1. KPI 전용 화면 -->
     <div id="view-kpi" class="view-section">
       <div id="kpi-section" class="card">
         <div class="card-header"><h3>🎯 그룹 KPI 목표 대비 실적</h3></div>
@@ -212,7 +267,6 @@
       <div id="hrCardsContainer"></div>
     </div>
 
-
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxpgzFc1W5Cr0uCc6v2XWSxPrvTZyZ1000OernKcycO61v_ukv2Q-BjFXXVHwQdImp-/exec";
     const TARGET_YEAR = "2026"; // 고정 연도
@@ -220,16 +274,27 @@
     let isAdmin = false; 
     let currentMode = 'group'; 
     let currentSection = '광양사무지원';
-    let adminCredentials = []; // 구글 시트에서 불러올 관리자 정보
+    let adminCredentials = []; 
+    let isInitialLoad = true; // ✨ 스플래시 화면 제어용 변수
 
     let profitBase = {}, profitApp = {};
     let hrData = { "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} };
     
-    // KPI 기본값 설정 (총 6개)
     let kpiTarget = { "매출액": 11180, "매출총이익률": 5, "장애인산정인원": 15, "건강개선목표달성률(%)": 100, "TRIFR(LTIFR)": 0, "교육이수시간(Hr)": 50 };
-    let kpiManualActuals = { "건강개선목표달성률(%)": 0, "TRIFR(LTIFR)": 0, "교육이수시간(Hr)": 0 }; // 수동 입력 실적
+    let kpiManualActuals = { "건강개선목표달성률(%)": 0, "TRIFR(LTIFR)": 0, "교육이수시간(Hr)": 0 }; 
 
+    // ✨ 스플래시 화면 끄기 함수
+    function hideSplashScreen() {
+      const splash = document.getElementById("splashScreen");
+      if (splash) {
+        splash.classList.add("hidden");
+        setTimeout(() => { splash.style.display = "none"; }, 800);
+      }
+    }
+
+    // 로딩바 함수: 처음 실행할 때는 스플래시가 있으므로 로딩바를 띄우지 않음
     function showLoading(s, text="데이터 불러오는 중...") { 
+      if(isInitialLoad && s) return; // 초기 로딩중일땐 내부 로딩바 무시
       document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; 
       document.getElementById('loadText').innerText = text;
     }
@@ -254,8 +319,6 @@
     function attemptLogin() {
       const id = document.getElementById('adminId').value;
       const pw = document.getElementById('adminPw').value;
-
-      // 시트에서 받아온 정보와 비교 (없으면 백업용 admin/admin1234 허용)
       const matched = adminCredentials.find(c => String(c.id) === String(id) && String(c.pw) === String(pw));
       
       if (matched || (id === 'admin' && pw === 'admin1234')) {
@@ -268,24 +331,18 @@
     }
     // ------------------------------------
 
-        function setMode(mode) {
+    function setMode(mode) {
       currentMode = mode;
-      
-      // 1. 탭 버튼 색상 변경 (4개 모두 제어)
       document.getElementById('tab-group').classList.toggle('active', mode === 'group');
       document.getElementById('tab-section').classList.toggle('active', mode === 'section');
-      document.getElementById('tab-kpi').classList.toggle('active', mode === 'kpi'); // 누락되었던 KPI 탭 추가
+      document.getElementById('tab-kpi').classList.toggle('active', mode === 'kpi'); 
       document.getElementById('tab-personnel').classList.toggle('active', mode === 'personnel');
       
-      // 2. 부서 선택 버튼은 섹션매출에서만 보이기
       document.getElementById('section-buttons').style.display = mode === 'section' ? 'flex' : 'none';
-      
-      // 3. 메인 화면 3가지 중 맞는 것만 보여주기
       document.getElementById('view-profit').classList.toggle('active', mode === 'group' || mode === 'section');
-      document.getElementById('view-kpi').classList.toggle('active', mode === 'kpi'); // 누락되었던 KPI 화면 추가
+      document.getElementById('view-kpi').classList.toggle('active', mode === 'kpi'); 
       document.getElementById('view-personnel').classList.toggle('active', mode === 'personnel');
       
-      // 4. 매출 화면 내부의 차트 제어
       document.getElementById('group-charts').style.display = mode === 'group' ? 'block' : 'none';
       document.getElementById('section-charts').style.display = mode === 'section' ? 'block' : 'none';
 
@@ -306,16 +363,26 @@
         const json = await res.json();
         if(json.error) throw new Error(json.error);
 
-        // 시트에서 관리자 정보 배열을 내려준다고 가정
         if(json.admin) adminCredentials = json.admin; 
-
         buildProfitData(json.profit || [], TARGET_YEAR);
         buildHRData(json.personnel || []);
         buildKPIData(json.kpi || []); 
         
         updateUI();
-        showLoading(false);
-      } catch (e) { showLoading(false); alert("데이터 로드 실패: " + e.message); }
+        
+        // ✨ 데이터 로딩이 끝나면 스플래시 화면을 끕니다!
+        if(isInitialLoad) {
+          hideSplashScreen();
+          isInitialLoad = false;
+        } else {
+          showLoading(false);
+        }
+
+      } catch (e) { 
+        if(isInitialLoad) hideSplashScreen();
+        showLoading(false); 
+        alert("데이터 로드 실패: " + e.message); 
+      }
     }
 
     function buildKPIData(kpiArr) {
@@ -323,7 +390,7 @@
       kpiArr.forEach(row => {
         let key = String(row["KPI"] || row["A"] || "").trim(); 
         let target = Number(row["목표"] || row["B"] || 0);
-        let actual = Number(row["실적"] || row["C"] || 0); // 백엔드에서 실적 컬럼도 보내준다고 가정
+        let actual = Number(row["실적"] || row["C"] || 0); 
 
         if (key && !isNaN(target)) {
           kpiTarget[key] = target;
@@ -332,7 +399,7 @@
       });
     }
 
-        function buildProfitData(pData, year) {
+    function buildProfitData(pData, year) {
       const empty12 = () => Array.from({length:12}, (_,i)=>({ m:`${i+1}월`, s:0, cL:0, cE:0, sgL:0, sgE:0, desc:"" }));
       profitBase = { "광양사무지원":empty12(), "광양총무지원":empty12(), "광양차량지원":empty12() };
       
@@ -341,16 +408,11 @@
       pData.forEach(r => {
         let ym = String(r["년월"]||"").trim(); 
         let sec = String(r["섹션"]||"").trim();
-        
         let monthIdx = -1;
         
-        // 🚨 날짜 포맷이 '2026-02' 이든 시트의 '2026. 2. 1' 이든 완벽하게 월(Month) 추출
         if (ym.startsWith(year)) {
-          if (ym.includes("-")) {
-            monthIdx = Number(ym.split("-")[1]) - 1; // "2026-02" 형태
-          } else if (ym.includes(".")) {
-            monthIdx = Number(ym.split(".")[1].trim()) - 1; // "2026. 2. 1" 형태
-          }
+          if (ym.includes("-")) monthIdx = Number(ym.split("-")[1]) - 1; 
+          else if (ym.includes(".")) monthIdx = Number(ym.split(".")[1].trim()) - 1; 
         }
 
         if(monthIdx >= 0 && monthIdx <= 11) {
@@ -360,9 +422,7 @@
             t.sgL+=Number(r["판관-급여"]||0); t.sgE+=Number(r["판관-경비"]||0);
             t.desc = String(r["분석내용"]||"").trim();
           }
-          if(sec === "그룹전체") {
-            groupDesc[monthIdx] = String(r["분석내용"]||"").trim();
-          }
+          if(sec === "그룹전체") groupDesc[monthIdx] = String(r["분석내용"]||"").trim();
         }
       });
       
@@ -378,7 +438,6 @@
       profitApp = { "그룹전체": pGrp, "광양사무지원": calcP(profitBase["광양사무지원"]), "광양총무지원": calcP(profitBase["광양총무지원"]), "광양차량지원": calcP(profitBase["광양차량지원"]) };
     }
 
-
     function buildHRData(hrArray) {
       hrData = { "광양사무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양총무지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0}, "광양차량지원": {mT:0, fT:0, mS:0, mM:0, fS:0, fM:0} };
       hrArray.forEach(r => {
@@ -392,13 +451,9 @@
     }
 
     function updateUI() { 
-      if (currentMode === 'kpi') {
-        renderKPI(); // KPI 탭일 때는 KPI 화면만 그리기
-      } else if (currentMode === 'personnel') {
-        renderHR();  // 인원 탭일 때는 인원 화면만 그리기
-      } else {
-        renderProfit(); // 그 외(그룹매출, 섹션매출)일 때는 손익표 그리기
-      }
+      if (currentMode === 'kpi') renderKPI(); 
+      else if (currentMode === 'personnel') renderHR();  
+      else renderProfit(); 
     }
 
     const fmt = n => (n||0)===0 ? "0" : Number(n).toLocaleString();
@@ -430,11 +485,8 @@
         let rate = 0;
         let color = "var(--color-sales-bar)"; let icon = "🟢"; let textCls = "positive";
 
-        if (k.lowerIsBetter) { // 낮을수록 좋은 지표 (ex: 재해율)
-          rate = k.actual <= k.target ? 100 : 0; // 목표(0) 이하 달성시 100%
-        } else {
-          rate = (k.actual / (k.target||1)) * 100;
-        }
+        if (k.lowerIsBetter) rate = k.actual <= k.target ? 100 : 0; 
+        else rate = (k.actual / (k.target||1)) * 100;
 
         let rateStr = rate.toFixed(1);
         if (rate >= 100) { color = "var(--positive)"; icon = "🟢"; textCls = "positive"; }
@@ -452,7 +504,6 @@
               현재 실적: <b>${formatValue(k.actual, k.unit)}${k.unit}</b> / 목표치: <b>${formatValue(k.target, k.unit)}${k.unit}</b>
             </div></div>`;
         
-        // 관리자 모드 입력 폼
         adminHtml += `<div style="background:#fff; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
           <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:#1E3A8A;">📌 ${k.name}</div>
           <div style="display:flex; gap:10px;">
@@ -501,7 +552,7 @@
               </div>
               <div style="margin-top:12px; border-top:1px dashed #cbd5e1; padding-top:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <label style="font-size:12px; font-weight:800; color:#1E3A8A;">✨ 부서 AI 경영 브리핑 (전월 비교)</label>
+                  <label style="font-size:12px; font-weight:800; color:#1E3A8A;">✨ 부서 AI 경영 브리핑</label>
                   <button class="admin-btn" style="padding:6px 10px; font-size:11px; background:#2563EB; color:white;" onclick="callGemini(${i})">✨ 리포트 자동생성</button>
                 </div>
                 <textarea id="ai-text-${i}" style="width:100%; height:100px; margin-top:8px; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; line-height:1.5; resize:none;">${r.desc || ""}</textarea>
@@ -526,7 +577,7 @@
               </div>
               <div style="margin-top:4px; border-top:1px dashed #cbd5e1; padding-top:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <label style="font-size:12px; font-weight:800; color:#1E3A8A;">✨ 그룹 통합 AI 경영 브리핑 (전월 비교)</label>
+                  <label style="font-size:12px; font-weight:800; color:#1E3A8A;">✨ 그룹 통합 AI 경영 브리핑</label>
                   <button class="admin-btn" style="padding:6px 10px; font-size:11px; background:#2563EB; color:white;" onclick="callGemini(${i})">✨ 통합 리포트 자동생성</button>
                 </div>
                 <textarea id="ai-text-${i}" style="width:100%; height:100px; margin-top:8px; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; line-height:1.5; resize:none;">${r.desc || ""}</textarea>
@@ -559,7 +610,6 @@
       }
     }
 
-    // 영업이익 그래프 영점(0) 완벽 정렬 반영
     function drawBarChart(containerId, data, key, color) {
       const area = document.getElementById(containerId); area.innerHTML = "";
       const isOp = key==="op";
@@ -567,15 +617,8 @@
       const line = document.createElement("div");
       line.style.position="absolute"; line.style.left="0"; line.style.right="0"; line.style.height="1px"; line.style.zIndex="0";
       
-      // bottom 22px는 하단 라벨 공간. 차트가 그려지는 실질 공간 안에서의 비율 계산
-      if(isOp) { 
-        line.style.borderTop="1px solid #999"; 
-        line.style.top="calc(50% - 11px)"; // 컨테이너 절반 위치 보정
-      } 
-      else { 
-        line.style.borderTop="1px dashed #cbd5e1"; 
-        line.style.bottom="22px"; 
-      }
+      if(isOp) { line.style.borderTop="1px solid #999"; line.style.top="calc(50% - 11px)"; } 
+      else { line.style.borderTop="1px dashed #cbd5e1"; line.style.bottom="22px"; }
       area.appendChild(line);
 
       const maxVal = Math.max(...data.map(d=>Math.abs(d[key])), 1);
@@ -592,12 +635,9 @@
         if(isOp){
           bar.style.height = isE ? "2px" : `${hp/2}%`;
           if(isP){ 
-            bar.style.bottom = "50%"; // 절반에서 위로
-            bar.style.borderRadius="4px 4px 0 0"; bar.style.alignItems="flex-start"; bar.style.paddingTop="4px";
-          }
-          else { 
-            bar.style.top = "50%"; // 절반에서 아래로
-            bar.style.borderRadius="0 0 4px 4px"; bar.style.alignItems="flex-end"; bar.style.paddingBottom="4px";
+            bar.style.bottom = "50%"; bar.style.borderRadius="4px 4px 0 0"; bar.style.alignItems="flex-start"; bar.style.paddingTop="4px";
+          } else { 
+            bar.style.top = "50%"; bar.style.borderRadius="0 0 4px 4px"; bar.style.alignItems="flex-end"; bar.style.paddingBottom="4px";
           }
         } else {
           bar.style.height = isE?"2px":`${hp}%`; bar.style.bottom="0"; bar.style.borderRadius="4px 4px 0 0"; bar.style.alignItems="flex-start"; bar.style.paddingTop="4px";
@@ -607,7 +647,6 @@
       });
     }
 
-    // 매출 비중에 금액 합계 추가
     function drawSalesPie() {
       const getS = k => profitApp[k].reduce((s,d)=>s+d.s,0);
       const items = [{n:"사무",v:getS("광양사무지원"),c:"var(--color-samu)"}, {n:"총무",v:getS("광양총무지원"),c:"var(--color-chongmu)"}, {n:"차량",v:getS("광양차량지원"),c:"var(--color-car)"}];
@@ -615,16 +654,7 @@
       const cEl = document.getElementById("pieChartSales"); const lEl = document.getElementById("pieLegendSales");
       if(tot>0) {
         let acc=0; cEl.style.background = `conic-gradient(${items.map(i=>{ let s=acc; acc+=(i.v/tot)*100; return `${i.c} ${s}% ${acc}%`;}).join(",")})`;
-        
-        lEl.innerHTML = items.map(i=>`
-          <div class="legend-item">
-            <div style="font-weight:600;"><span class="dot" style="background:${i.c}"></span>${i.n}</div>
-            <div style="text-align:right; line-height:1.3;">
-              <b>${((i.v/tot)*100).toFixed(1)}%</b><br>
-              <span style="font-size:11px; color:var(--sub);">${fmt(i.v)}백만원</span>
-            </div>
-          </div>
-        `).join("");
+        lEl.innerHTML = items.map(i=>`<div class="legend-item"><div style="font-weight:600;"><span class="dot" style="background:${i.c}"></span>${i.n}</div><div style="text-align:right; line-height:1.3;"><b>${((i.v/tot)*100).toFixed(1)}%</b><br><span style="font-size:11px; color:var(--sub);">${fmt(i.v)}백만원</span></div></div>`).join("");
       } else { cEl.style.background="#e2e8f0"; lEl.innerHTML="데이터 없음"; }
     }
 
@@ -674,7 +704,6 @@
 
     async function callGemini(i) {
       let curr = {}; let prev = null; 
-
       if (currentMode === 'group') {
         let r = profitApp["그룹전체"][i];
         curr = { sales: r.s, cogsLabor: r.cL, cogsExp: r.cE, sgaLabor: r.sgL, sgaExp: r.sgE, opProfit: r.op };
@@ -684,7 +713,6 @@
         curr.opProfit = curr.sales - (curr.cogsLabor + curr.cogsExp) - (curr.sgaLabor + curr.sgaExp);
         if (i > 0) { let p = profitApp[currentSection][i-1]; prev = { sales: p.s, cogsLabor: p.cL, cogsExp: p.cE, sgaLabor: p.sgL, sgaExp: p.sgE, opProfit: p.op }; }
       }
-
       if(curr.sales === 0 && curr.opProfit === 0) { alert("먼저 실적 데이터를 입력해야 AI 분석이 가능합니다!"); return; }
 
       let payload = { type: 'generate_ai', data: { current: curr, previous: prev } };
@@ -718,21 +746,18 @@
       await postData(p);
     }
 
-    // KPI 타겟과 수동입력 실적 동시 저장
     async function saveKPI() {
       let keys = [
         {key: "매출액", auto: true}, {key: "매출총이익률", auto: true}, {key: "장애인산정인원", auto: true},
         {key: "건강개선목표달성률(%)", auto: false}, {key: "TRIFR(LTIFR)", auto: false}, {key: "교육이수시간(Hr)", auto: false}
       ];
       let payload = { type: 'kpi_multi', kpis: [] };
-      
       keys.forEach((k, idx) => { 
         let tVal = Number(document.getElementById(`kpi-target-${idx}`).value);
-        let aVal = k.auto ? null : Number(document.getElementById(`kpi-actual-${idx}`).value); // 자동 항목은 실적 저장 안함
+        let aVal = k.auto ? null : Number(document.getElementById(`kpi-actual-${idx}`).value); 
         payload.kpis.push({ name: k.key, target: tVal, actual: aVal }); 
       });
-
-      showLoading(true);
+      showLoading(true, "KPI 저장 중...");
       try { await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) }); alert("🎯 저장되었습니다!"); await loadData(); } catch(e) { alert("실패"); showLoading(false); }
     }
 
