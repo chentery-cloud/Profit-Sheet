@@ -18,7 +18,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="https://raw.githubusercontent.com/chentery-cloud/Profit-Sheet/main/icons/icon-512.png">
 
-  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"Frofit Sheet","short_name":"P-Humans","display":"standalone"}'>
+ <link rel="manifest" href="./manifest.json">
 
   <!-- 기존 폰트 및 CSS 시작 -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -774,5 +774,18 @@
 
     window.onload = loadData;
   </script>
+
+<script>
+    // PWA 서비스 워커 등록 (앱 캐싱 및 오프라인 지원)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('Service Worker 등록 완료! (앱 모드 활성화)'))
+          .catch(err => console.log('Service Worker 등록 실패:', err));
+      });
+    }
+  </script>
+
+    
 </body>
 </html>
