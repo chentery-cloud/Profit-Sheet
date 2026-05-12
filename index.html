@@ -320,7 +320,7 @@
       const pw = document.getElementById('adminPw').value;
       const matched = adminCredentials.find(c => String(c.id) === String(id) && String(c.pw) === String(pw));
       
-      if (matched || (id === 'admin' && pw === 'admin1234')) {
+      if (matched) {
         isAdmin = true;
         document.getElementById('adminBtn').innerText = '로그아웃 (관리자)';
         closeAdminModal();
